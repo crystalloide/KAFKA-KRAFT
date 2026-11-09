@@ -50,7 +50,8 @@ Chaque handlab contient aussi les blocs `cat > fichier <<'EOF_KAFKA_KRAFT'` qui 
  │  broker-4         (id 14, profil "scale")                                       │
  │  kafka-ui :8080   prometheus :9090  grafana :3000  kafka-exporter :9308         │
  │  connect :8083 + postgres   schema-registry :8081   ksqldb-server :8088         │
- │  kafka-dr :9292 + mirror-maker (profil "mirror")    akhq :8090 (profil "consoles")│
+ │  kafka-dr :9292 + mirror-maker + kafka-ui-dr :8089 (profil "mirror")             │
+ │  akhq :8090 (profil "consoles")                                                 │
  └───────────────────────────────────────────────────────────────────────────────┘
    accès depuis WSL : localhost:9092 (broker-1), :9094 (broker-2), :9096 (broker-3), :9098 (broker-4)
 ```
@@ -63,7 +64,7 @@ Chaque handlab contient aussi les blocs `cat > fichier <<'EOF_KAFKA_KRAFT'` qui 
 | `connect` | connect, postgres | TP07a |
 | `schema` | schema-registry | TP07c |
 | `ksqldb` | schema-registry, ksqldb-server | TP07d |
-| `mirror` | kafka-dr, mirror-maker | TP07e |
+| `mirror` | kafka-dr, mirror-maker, kafka-ui-dr (console des 2 clusters, port 8089) | TP07e |
 | `consoles` | akhq | TP04 |
 
 ## Réglages de production appliqués

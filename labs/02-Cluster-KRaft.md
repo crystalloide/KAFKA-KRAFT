@@ -137,10 +137,10 @@ cat > docker-compose.yml <<'EOF_KAFKA_KRAFT'
 #    connect    : Kafka Connect distribué (8083) + PostgreSQL (CDC Debezium)
 #    schema     : Schema Registry (8081)
 #    ksqldb     : ksqlDB (8088) (+ Schema Registry)
-#    mirror     : cluster de secours kafka-dr (9292) + MirrorMaker 2
+#    mirror     : cluster de secours kafka-dr (9292) + MirrorMaker 2 + Kafka UI DR (8089)
 #    consoles   : AKHQ (8090), console web alternative à Kafka UI
 #
-#  Pré-requis : ./scripts/setup.sh (télécharge l'agent JMX Exporter, etc.)
+#  Pré-requis : bash scripts/setup.sh (télécharge l'agent JMX Exporter, etc.)
 # =============================================================================
 name: kafka-kraft
 
@@ -394,8 +394,8 @@ services:
       KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: "connect"
       KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: "http://connect:8083"
       KAFKA_CLUSTERS_0_KSQLDBSERVER: "http://ksqldb-server:8088"
-      KAFKA_CLUSTERS_1_NAME: "kafka-dr"
-      KAFKA_CLUSTERS_1_BOOTSTRAPSERVERS: "kafka-dr:19092"
+      # Le cluster de secours "kafka-dr" n'est volontairement PAS déclaré ici : il n'existe
+      # qu'avec le profil "mirror" (sinon erreurs DNS toutes les 30 s). Voir kafka-ui-dr.
     depends_on: *depends-on-brokers
 
   # ===========================================================================
@@ -610,6 +610,27 @@ services:
       KAFKA_HEAP_OPTS: "-Xms256m -Xmx512m"
     volumes:
       - ./config/mm2/mm2.properties:/etc/mm2/mm2.properties:ro
+    depends_on:
+      <<: *depends-on-brokers
+      kafka-dr:
+        condition: service_healthy
+
+  # Console Kafka UI dédiée au TP07e : clusters "kafka-kraft" ET "kafka-dr"
+  # côte à côte - http://localhost:8089
+  kafka-ui-dr:
+    image: ${KAFKA_UI_IMAGE}
+    profiles: ["mirror"]
+    container_name: kafka-ui-dr
+    restart: unless-stopped
+    networks:
+      - kafka-net
+    ports:
+      - "8089:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: "kafka-kraft"
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "broker-1:19092,broker-2:19092,broker-3:19092"
+      KAFKA_CLUSTERS_1_NAME: "kafka-dr"
+      KAFKA_CLUSTERS_1_BOOTSTRAPSERVERS: "kafka-dr:19092"
     depends_on:
       <<: *depends-on-brokers
       kafka-dr:
@@ -1230,7 +1251,8 @@ NodeId  DirectoryId             LogEndOffset  Lag  LastFetchTimestamp  LastCaugh
 Ouvrez **Kafka UI** depuis le navigateur Windows : <http://localhost:8080> → cluster `kafka-kraft`
 → *Brokers* (3 brokers, racks, métriques), *Topics*, *Consumers*.
 
-> Le second cluster `kafka-dr` apparaît *offline* : il n'est démarré qu'au TP07e (MirrorMaker 2).
+> Seul le cluster `kafka-kraft` est déclaré. Le cluster de secours `kafka-dr` du TP07e (MirrorMaker 2)
+> dispose de sa propre console, démarrée avec lui : <http://localhost:8089>.
 
 Etat synthétique à tout moment :
 

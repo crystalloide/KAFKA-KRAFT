@@ -112,18 +112,23 @@ Démarrage du cluster de secours et de MM2 (profil `mirror`) :
 ```bash
 cd ~/KAFKA-KRAFT
 docker compose --profile mirror up -d
-docker compose ps kafka-dr mirror-maker
+docker compose ps kafka-dr mirror-maker kafka-ui-dr
 kafka-cluster.sh cluster-id --bootstrap-server $BOOTSTRAP_DR
 ```
 
 ```text
-NAME           IMAGE                SERVICE        STATUS
-kafka-dr       apache/kafka:4.4.0   kafka-dr       Up 40 seconds (healthy)
-mirror-maker   apache/kafka:4.4.0   mirror-maker   Up 5 seconds
+NAME           IMAGE                             SERVICE        STATUS
+kafka-dr       apache/kafka:4.4.0                kafka-dr       Up 40 seconds (healthy)
+kafka-ui-dr    ghcr.io/kafbat/kafka-ui:v1.5.0    kafka-ui-dr    Up 5 seconds
+mirror-maker   apache/kafka:4.4.0                mirror-maker   Up 5 seconds
 Cluster ID: Pkdd4qI5SaGzACER4PM-6A
 ```
 
 Deux clusters indépendants : identifiants différents (`CLUSTER_ID` et `DR_CLUSTER_ID` du fichier `.env`).
+
+Une console Kafka UI dédiée affiche les **deux** clusters côte à côte : <http://localhost:8089>
+(clusters `kafka-kraft` et `kafka-dr`). La console principale (port 8080) ne déclare pas `kafka-dr`,
+qui n'existe qu'avec le profil `mirror`.
 
 ---
 
@@ -156,6 +161,9 @@ primary.mm2-demo:0:104
 primary.mm2-demo:1:97
 primary.mm2-demo:2:99
 ```
+
+Dans la console <http://localhost:8089>, comparez le topic `mm2-demo` (cluster `kafka-kraft`) et
+`primary.mm2-demo` (cluster `kafka-dr`) : mêmes partitions, mêmes messages.
 
 > La répartition par partition varie ; elle est **identique** des deux côtés (même partition, même
 > ordre). Les topics internes `mm2-*.primary.internal` sont ceux du worker Connect embarqué.
@@ -295,7 +303,7 @@ Bonnes pratiques :
 
 ```bash
 cd ~/KAFKA-KRAFT
-docker compose --profile mirror stop mirror-maker kafka-dr
+docker compose --profile mirror stop mirror-maker kafka-ui-dr kafka-dr
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --delete --topic mm2-demo-new
 kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --delete --group mm2-group
 ```
