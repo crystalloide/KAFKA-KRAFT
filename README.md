@@ -14,6 +14,7 @@
 08-Conclusion.md
 ```text
 
+_____
 
 #####  Installation
 
@@ -36,4 +37,9 @@ pwd
 cd ~
 sudo rm -Rf ~/KAFKA-KRAFT
 git clone https://github.com/crystalloide/KAFKA-KRAFT
+```
+
+```bash
+cd ~/KAFKA-KRAFT
+pwd
 ```
