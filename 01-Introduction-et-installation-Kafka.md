@@ -144,7 +144,11 @@ Affichage attendu : `4.4.0`
 
 ```bash
 ls /opt/kafka
+```
+```bash
 ls /opt/kafka/bin | head -50
+```
+```bash
 ls /opt/kafka/config
 ```
 
