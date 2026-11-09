@@ -1,3 +1,4 @@
+```text
 00-Preparation-environnement-WSL2.md
 01-Introduction-et-installation-Kafka.md
 02-Cluster-KRaft.md
@@ -11,3 +12,4 @@
 07d-ksqlDB.md
 07e-MirrorMaker2.md
 08-Conclusion.md
+```text
