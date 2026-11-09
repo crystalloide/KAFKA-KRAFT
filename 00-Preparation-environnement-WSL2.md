@@ -67,7 +67,7 @@ Affichage attendu (la colonne `VERSION` doit valoir **2**) :
 
 > Si la distribution existait déjà en version 1 : `wsl --set-version Ubuntu-24.04 2`
 
-### 1.2 Dimensionner la VM WSL2 : fichier `%UserProfile%\.wslconfig` (PowerShell **utilisateu normal !!!**)
+### 1.2 Dimensionner la VM WSL2 : fichier `%UserProfile%\.wslconfig` (!!! PowerShell **utilisateur normal !!!**)
 
 Dans PowerShell (utilisateur normal), ouvrez le fichier avec le Bloc-notes :
 
