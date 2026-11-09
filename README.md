@@ -12,7 +12,7 @@
 07d-ksqlDB.md
 07e-MirrorMaker2.md
 08-Conclusion.md
-```text
+```
 
 _____
 
@@ -24,11 +24,13 @@ ubuntu
 ```
 
 2°) Prendre le user souhaité :
+
 ```bash
 su - user
 ```
 
 3°) Regarder où nous sommes :
+
 ```bash
 pwd
 ```
