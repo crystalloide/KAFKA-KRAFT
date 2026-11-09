@@ -28,6 +28,7 @@ Le planning détaillé des deux jours figure dans le TP08 (partie G).
 
 ```bash
 # Ubuntu sous WSL2, Docker Engine >= 25, Java 21, Maven (voir TP00)
+rmdir -Rf  ~/KAFKA-KRAFT
 cd ~ && git clone https://github.com/crystalloide/KAFKA-KRAFT.git && cd KAFKA-KRAFT
 ./scripts/setup.sh                     # pré-requis + agent JMX Prometheus
 docker compose up -d                   # 3 contrôleurs + 3 brokers + Kafka UI
