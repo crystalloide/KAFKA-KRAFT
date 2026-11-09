@@ -28,7 +28,8 @@ Le planning détaillé des deux jours figure dans le TP08 (partie G).
 
 ```bash
 # Ubuntu sous WSL2, Docker Engine >= 25, Java 21, Maven (voir TP00)
-cd ~ && git clone https://github.com/crystalloide/KAFKA-KRAFT.git && cd KAFKA-KRAFT
+cd ~ && rm -Rf ~/KAFKA-KRAFT
+git clone https://github.com/crystalloide/KAFKA-KRAFT.git && cd KAFKA-KRAFT
 bash scripts/setup.sh                  # pré-requis + agent JMX Prometheus + droits d'exécution
 docker compose up -d                   # 3 contrôleurs + 3 brokers + Kafka UI
 ./scripts/create-topics.sh             # topics de la formation
