@@ -43,12 +43,12 @@ Un **événement** = un fait qui s'est produit (« commande créée », « capte
 
 ```text
                      Topic "orders" (3 partitions, facteur de réplication 3)
- Producers          ┌───────────────────────────────────────────────────┐          Consumer group "facturation"
- ─────────►  P0  │ 0 │ 1 │ 2 │ 3 │ 4 │ 5 │ ...  ◄── leader sur broker 11  │ ──► consumer A (P0, P1)
- (clé => P)  P1  │ 0 │ 1 │ 2 │ 3 │ ...          ◄── leader sur broker 12  │ ──► consumer B (P2)
-             P2  │ 0 │ 1 │ 2 │ 3 │ 4 │ ...      ◄── leader sur broker 13  │
-                    └───────────────────────────────────────────────────┘          Consumer group "analytique"
-                      offsets croissants, ajout en fin de journal (append-only)    ──► consumer C (P0, P1, P2)
+ Producers          ┌─────────────────────────────────────────────────────────┐     Consumer group "facturation"
+ ─────────►     P0  │ 0 │ 1 │ 2 │ 3 │ 4 │ 5 │ ...  ◄── leader sur broker 11   │ 	──► consumer A (P0, P1)
+ (clé => P)     P1  │ 0 │ 1 │ 2 │ 3 │ ...          ◄── leader sur broker 12   │ 	──► consumer B (P2)
+                P2  │ 0 │ 1 │ 2 │ 3 │ 4 │ ...      ◄── leader sur broker 13   │
+                    └─────────────────────────────────────────────────────────┘     Consumer group "analytique"
+                      offsets croissants, ajout en fin de journal (append-only)    	──► consumer C (P0, P1, P2)
 ```
 
 - Un **topic** est découpé en **partitions** : unité de parallélisme et d'**ordre** (l'ordre n'est garanti
