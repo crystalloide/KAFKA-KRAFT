@@ -5,7 +5,8 @@
 #   - télécharge l'agent Prometheus JMX Exporter (obligatoire : monté dans
 #     tous les conteneurs Kafka via KAFKA_OPTS=-javaagent:...)
 #   - crée les répertoires de données de Kafka Connect
-#  Usage : ./scripts/setup.sh
+#  Usage : bash scripts/setup.sh   (fonctionne même si le bit "exécutable"
+#          des scripts a été perdu, puis le rétablit)
 # =============================================================================
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -26,6 +27,14 @@ download() { # download <destination> <url1> [url2...]
   done
   rm -f "${dest}.part"; return 1
 }
+
+echo "=== 0. Fichiers du projet ==="
+if [ ! -f .env ] && [ -f env.txt ]; then
+  cp env.txt .env && warn ".env absent : recréé à partir de env.txt"
+fi
+for f in .env docker-compose.yml config/jmx-exporter/kafka.yml; do
+  [ -f "$f" ] && ok "$f présent" || { ko "$f absent : récupérez le projet complet (TP00 §4)"; exit 1; }
+done
 
 echo "=== 1. Pré-requis ==="
 command -v docker >/dev/null && ok "docker : $(docker --version)" || { ko "docker absent (voir TP00)"; exit 1; }
@@ -71,7 +80,8 @@ for d in config data; do
   find "$d" -type f -exec chmod 644 {} \;
 done
 chmod +x scripts/*.sh
-ok "droits positionnés"
+[ -f java/kafka-java-native/run.sh ] && chmod +x java/kafka-java-native/run.sh
+ok "droits positionnés (scripts exécutables)"
 
 echo
 echo "Environnement prêt. Démarrage du cluster :  docker compose up -d"

@@ -193,7 +193,7 @@ Démarrage du profil `connect` (worker + PostgreSQL utilisé en Partie F) :
 
 ```bash
 cd ~/KAFKA-KRAFT
-./scripts/setup.sh > /dev/null
+bash scripts/setup.sh > /dev/null
 docker compose --profile connect up -d
 sleep 45
 docker compose --profile connect ps connect postgres --format "table {{.Name}}\t{{.Status}}"

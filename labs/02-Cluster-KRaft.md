@@ -947,7 +947,8 @@ cat > scripts/setup.sh <<'EOF_KAFKA_KRAFT'
 #   - télécharge l'agent Prometheus JMX Exporter (obligatoire : monté dans
 #     tous les conteneurs Kafka via KAFKA_OPTS=-javaagent:...)
 #   - crée les répertoires de données de Kafka Connect
-#  Usage : ./scripts/setup.sh
+#  Usage : bash scripts/setup.sh   (fonctionne même si le bit "exécutable"
+#          des scripts a été perdu, puis le rétablit)
 # =============================================================================
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -968,6 +969,14 @@ download() { # download <destination> <url1> [url2...]
   done
   rm -f "${dest}.part"; return 1
 }
+
+echo "=== 0. Fichiers du projet ==="
+if [ ! -f .env ] && [ -f env.txt ]; then
+  cp env.txt .env && warn ".env absent : recréé à partir de env.txt"
+fi
+for f in .env docker-compose.yml config/jmx-exporter/kafka.yml; do
+  [ -f "$f" ] && ok "$f présent" || { ko "$f absent : récupérez le projet complet (TP00 §4)"; exit 1; }
+done
 
 echo "=== 1. Pré-requis ==="
 command -v docker >/dev/null && ok "docker : $(docker --version)" || { ko "docker absent (voir TP00)"; exit 1; }
@@ -1013,7 +1022,8 @@ for d in config data; do
   find "$d" -type f -exec chmod 644 {} \;
 done
 chmod +x scripts/*.sh
-ok "droits positionnés"
+[ -f java/kafka-java-native/run.sh ] && chmod +x java/kafka-java-native/run.sh
+ok "droits positionnés (scripts exécutables)"
 
 echo
 echo "Environnement prêt. Démarrage du cluster :  docker compose up -d"
@@ -1080,12 +1090,20 @@ chmod +x scripts/cluster-status.sh
 
 ```bash
 cd ~/KAFKA-KRAFT
-./scripts/setup.sh
+bash scripts/setup.sh
 ```
+
+> `bash scripts/setup.sh` fonctionne même si les scripts ont perdu leur bit « exécutable » (dépôt
+> alimenté par l'interface web de GitHub ou copié depuis Windows) : le script le rétablit à la fin.
+> Ensuite, `./scripts/xxx.sh` fonctionne normalement.
 
 Affichage attendu :
 
 ```text
+=== 0. Fichiers du projet ===
+  [OK]   .env présent
+  [OK]   docker-compose.yml présent
+  [OK]   config/jmx-exporter/kafka.yml présent
 === 1. Pré-requis ===
   [OK]   docker : Docker version 29.x.x ...
   [OK]   docker compose : 2.x.x
@@ -1101,7 +1119,7 @@ Affichage attendu :
 === 3. Répertoires Kafka Connect ===
   [OK]   connect/data/{input,output} prêts
 === 4. Droits de lecture des fichiers montés dans les conteneurs ===
-  [OK]   droits positionnés
+  [OK]   droits positionnés (scripts exécutables)
 ```
 
 > ⚠️ L'agent `config/jmx-exporter/jmx_prometheus_javaagent.jar` **doit** exister avant le démarrage :
