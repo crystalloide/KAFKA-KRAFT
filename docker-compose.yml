@@ -1,0 +1,533 @@
+# =============================================================================
+#  KAFKA-KRAFT - Environnement de formation Apache Kafka 4.4.0 (mode KRaft)
+#
+#  Architecture "production-like" (mode isolé, recommandé en production) :
+#    - 3 contrôleurs KRaft dédiés (quorum Raft des métadonnées) : nodes 1, 2, 3
+#    - 3 brokers dédiés (données)                               : nodes 11, 12, 13
+#    - Kafka UI (console web)                                   : http://localhost:8080
+#
+#  Composants optionnels activés par profil (--profile <nom>) :
+#    scale      : broker-4 (node 14) pour le TP de scalabilité
+#    monitoring : Prometheus (9090), Grafana (3000), kafka-exporter (9308)
+#    connect    : Kafka Connect distribué (8083) + PostgreSQL (CDC Debezium)
+#    schema     : Schema Registry (8081)
+#    ksqldb     : ksqlDB (8088) (+ Schema Registry)
+#    mirror     : cluster de secours kafka-dr (9292) + MirrorMaker 2
+#    consoles   : AKHQ (8090), console web alternative à Kafka UI
+#
+#  Pré-requis : ./scripts/setup.sh (télécharge l'agent JMX Exporter, etc.)
+# =============================================================================
+name: kafka-kraft
+
+# -----------------------------------------------------------------------------
+#  Blocs réutilisables (ancres YAML)
+# -----------------------------------------------------------------------------
+x-kafka-base: &kafka-base
+  image: ${KAFKA_IMAGE}
+  restart: unless-stopped
+  networks:
+    - kafka-net
+  ulimits:                       # descripteurs de fichiers : >= 100 000 en production
+    nofile:
+      soft: 100000
+      hard: 100000
+  logging:                       # rotation des logs Docker
+    driver: json-file
+    options:
+      max-size: "20m"
+      max-file: "3"
+
+# Valeurs par défaut des topics : en mode KRaft, c'est le CONTROLEUR qui applique
+# num.partitions / default.replication.factor lors d'une création de topic.
+x-topic-defaults: &topic-defaults
+  KAFKA_NUM_PARTITIONS: 3
+  KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+  KAFKA_MIN_INSYNC_REPLICAS: 2
+
+x-controller-env: &controller-env
+  <<: *topic-defaults
+  CLUSTER_ID: ${CLUSTER_ID}
+  KAFKA_PROCESS_ROLES: "controller"
+  KAFKA_CONTROLLER_QUORUM_VOTERS: "1@controller-1:9093,2@controller-2:9093,3@controller-3:9093"
+  KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+  KAFKA_LISTENERS: "CONTROLLER://:9093"
+  KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT"
+  KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+  KAFKA_HEAP_OPTS: ${CONTROLLER_HEAP_OPTS}
+  KAFKA_OPTS: "-javaagent:/opt/jmx-exporter/jmx_prometheus_javaagent.jar=9404:/opt/jmx-exporter/kafka.yml"
+
+x-broker-env: &broker-env
+  <<: *topic-defaults
+  CLUSTER_ID: ${CLUSTER_ID}
+  KAFKA_PROCESS_ROLES: "broker"
+  KAFKA_CONTROLLER_QUORUM_VOTERS: "1@controller-1:9093,2@controller-2:9093,3@controller-3:9093"
+  KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+  KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT"
+  KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+  KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+  # --- Paramétrage "production" -------------------------------------------
+  KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+  KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: "false"
+  KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+  KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+  KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+  KAFKA_SHARE_COORDINATOR_STATE_TOPIC_REPLICATION_FACTOR: 3
+  KAFKA_SHARE_COORDINATOR_STATE_TOPIC_MIN_ISR: 2
+  KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 3000
+  KAFKA_NUM_NETWORK_THREADS: 3
+  KAFKA_NUM_IO_THREADS: 8
+  KAFKA_NUM_REPLICA_FETCHERS: 2
+  KAFKA_NUM_RECOVERY_THREADS_PER_DATA_DIR: 2
+  KAFKA_SOCKET_SEND_BUFFER_BYTES: 102400
+  KAFKA_SOCKET_RECEIVE_BUFFER_BYTES: 102400
+  KAFKA_SOCKET_REQUEST_MAX_BYTES: 104857600
+  KAFKA_LOG_RETENTION_HOURS: 168
+  KAFKA_LOG_SEGMENT_BYTES: 1073741824
+  KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 300000
+  KAFKA_REPLICA_LAG_TIME_MAX_MS: 30000
+  KAFKA_HEAP_OPTS: ${BROKER_HEAP_OPTS}
+  KAFKA_OPTS: "-javaagent:/opt/jmx-exporter/jmx_prometheus_javaagent.jar=9404:/opt/jmx-exporter/kafka.yml"
+
+# Contrôle de santé d'un contrôleur : port Raft ouvert
+x-controller-healthcheck: &controller-healthcheck
+  test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9093"]
+  interval: 10s
+  timeout: 5s
+  retries: 10
+  start_period: 20s
+
+# Contrôle de santé d'un broker : requête réelle sur le listener interne.
+# KAFKA_OPTS est vidé pour ne pas relancer l'agent JMX (port 9404 déjà pris).
+x-broker-healthcheck: &broker-healthcheck
+  test: ["CMD-SHELL", "KAFKA_OPTS= KAFKA_HEAP_OPTS=-Xmx128m /opt/kafka/bin/kafka-cluster.sh cluster-id --bootstrap-server localhost:19092 > /dev/null 2>&1"]
+  interval: 30s
+  timeout: 25s
+  retries: 6
+  start_period: 90s
+  start_interval: 5s
+
+x-jmx-volume: &jmx-volume "./config/jmx-exporter:/opt/jmx-exporter:ro"
+
+x-depends-on-controllers: &depends-on-controllers
+  controller-1:
+    condition: service_healthy
+  controller-2:
+    condition: service_healthy
+  controller-3:
+    condition: service_healthy
+
+x-depends-on-brokers: &depends-on-brokers
+  broker-1:
+    condition: service_healthy
+  broker-2:
+    condition: service_healthy
+  broker-3:
+    condition: service_healthy
+
+services:
+  # ===========================================================================
+  #  Contrôleurs KRaft (quorum de métadonnées) - non exposés sur l'hôte
+  # ===========================================================================
+  controller-1:
+    <<: *kafka-base
+    hostname: controller-1
+    container_name: controller-1
+    stop_grace_period: 30s
+    environment:
+      <<: *controller-env
+      KAFKA_NODE_ID: 1
+    volumes:
+      - controller-1-data:/var/lib/kafka/data
+      - *jmx-volume
+    healthcheck: *controller-healthcheck
+
+  controller-2:
+    <<: *kafka-base
+    hostname: controller-2
+    container_name: controller-2
+    stop_grace_period: 30s
+    environment:
+      <<: *controller-env
+      KAFKA_NODE_ID: 2
+    volumes:
+      - controller-2-data:/var/lib/kafka/data
+      - *jmx-volume
+    healthcheck: *controller-healthcheck
+
+  controller-3:
+    <<: *kafka-base
+    hostname: controller-3
+    container_name: controller-3
+    stop_grace_period: 30s
+    environment:
+      <<: *controller-env
+      KAFKA_NODE_ID: 3
+    volumes:
+      - controller-3-data:/var/lib/kafka/data
+      - *jmx-volume
+    healthcheck: *controller-healthcheck
+
+  # ===========================================================================
+  #  Brokers - listener INTERNAL (réseau Docker) et EXTERNAL (hôte WSL / Windows)
+  # ===========================================================================
+  broker-1:
+    <<: *kafka-base
+    hostname: broker-1
+    container_name: broker-1
+    stop_grace_period: 60s          # temps laissé à l'arrêt contrôlé (controlled shutdown)
+    ports:
+      - "9092:9092"
+    environment:
+      <<: *broker-env
+      KAFKA_NODE_ID: 11
+      KAFKA_BROKER_RACK: "rack-a"
+      KAFKA_LISTENERS: "INTERNAL://:19092,EXTERNAL://:9092"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://broker-1:19092,EXTERNAL://localhost:9092"
+    volumes:
+      - broker-1-data:/var/lib/kafka/data
+      - *jmx-volume
+    depends_on: *depends-on-controllers
+    healthcheck: *broker-healthcheck
+
+  broker-2:
+    <<: *kafka-base
+    hostname: broker-2
+    container_name: broker-2
+    stop_grace_period: 60s
+    ports:
+      - "9094:9094"
+    environment:
+      <<: *broker-env
+      KAFKA_NODE_ID: 12
+      KAFKA_BROKER_RACK: "rack-b"
+      KAFKA_LISTENERS: "INTERNAL://:19092,EXTERNAL://:9094"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://broker-2:19092,EXTERNAL://localhost:9094"
+    volumes:
+      - broker-2-data:/var/lib/kafka/data
+      - *jmx-volume
+    depends_on: *depends-on-controllers
+    healthcheck: *broker-healthcheck
+
+  broker-3:
+    <<: *kafka-base
+    hostname: broker-3
+    container_name: broker-3
+    stop_grace_period: 60s
+    ports:
+      - "9096:9096"
+    environment:
+      <<: *broker-env
+      KAFKA_NODE_ID: 13
+      KAFKA_BROKER_RACK: "rack-c"
+      KAFKA_LISTENERS: "INTERNAL://:19092,EXTERNAL://:9096"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://broker-3:19092,EXTERNAL://localhost:9096"
+    volumes:
+      - broker-3-data:/var/lib/kafka/data
+      - *jmx-volume
+    depends_on: *depends-on-controllers
+    healthcheck: *broker-healthcheck
+
+  # Broker supplémentaire (TP scalabilité) : docker compose --profile scale up -d
+  broker-4:
+    <<: *kafka-base
+    profiles: ["scale"]
+    hostname: broker-4
+    container_name: broker-4
+    stop_grace_period: 60s
+    ports:
+      - "9098:9098"
+    environment:
+      <<: *broker-env
+      KAFKA_NODE_ID: 14
+      KAFKA_BROKER_RACK: "rack-a"
+      KAFKA_LISTENERS: "INTERNAL://:19092,EXTERNAL://:9098"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://broker-4:19092,EXTERNAL://localhost:9098"
+    volumes:
+      - broker-4-data:/var/lib/kafka/data
+      - *jmx-volume
+    depends_on: *depends-on-controllers
+    healthcheck: *broker-healthcheck
+
+  # ===========================================================================
+  #  Console web Kafka UI (kafbat) : http://localhost:8080
+  # ===========================================================================
+  kafka-ui:
+    image: ${KAFKA_UI_IMAGE}
+    container_name: kafka-ui
+    restart: unless-stopped
+    networks:
+      - kafka-net
+    ports:
+      - "8080:8080"
+    environment:
+      DYNAMIC_CONFIG_ENABLED: "true"
+      KAFKA_CLUSTERS_0_NAME: "kafka-kraft"
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "broker-1:19092,broker-2:19092,broker-3:19092"
+      KAFKA_CLUSTERS_0_METRICS_TYPE: "PROMETHEUS"
+      KAFKA_CLUSTERS_0_METRICS_PORT: 9404
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: "http://schema-registry:8081"
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: "connect"
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: "http://connect:8083"
+      KAFKA_CLUSTERS_0_KSQLDBSERVER: "http://ksqldb-server:8088"
+      KAFKA_CLUSTERS_1_NAME: "kafka-dr"
+      KAFKA_CLUSTERS_1_BOOTSTRAPSERVERS: "kafka-dr:19092"
+    depends_on: *depends-on-brokers
+
+  # ===========================================================================
+  #  Profil "monitoring" : Prometheus + Grafana + kafka-exporter
+  # ===========================================================================
+  prometheus:
+    image: ${PROMETHEUS_IMAGE}
+    profiles: ["monitoring"]
+    container_name: prometheus
+    restart: unless-stopped
+    networks:
+      - kafka-net
+    ports:
+      - "9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"
+      - "--web.enable-lifecycle"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # pour scruter l'application Spring Boot lancée sous WSL
+    volumes:
+      - ./config/prometheus:/etc/prometheus:ro
+      - prometheus-data:/prometheus
+
+  grafana:
+    image: ${GRAFANA_IMAGE}
+    profiles: ["monitoring"]
+    container_name: grafana
+    restart: unless-stopped
+    networks:
+      - kafka-net
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: "admin"
+      GF_SECURITY_ADMIN_PASSWORD: "kafka"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: "/etc/grafana/dashboards/kafka-overview.json"
+    volumes:
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+  kafka-exporter:
+    image: ${KAFKA_EXPORTER_IMAGE}
+    profiles: ["monitoring"]
+    container_name: kafka-exporter
+    restart: unless-stopped
+    networks:
+      - kafka-net
+    ports:
+      - "9308:9308"
+    command:
+      - "--kafka.server=broker-1:19092"
+      - "--kafka.server=broker-2:19092"
+      - "--kafka.server=broker-3:19092"
+      - "--kafka.version=3.9.0"
+      - "--topic.filter=^[^_].*"
+      - "--group.filter=.*"
+    depends_on: *depends-on-brokers
+
+  # ===========================================================================
+  #  Profil "connect" : Kafka Connect distribué + PostgreSQL (source CDC)
+  # ===========================================================================
+  connect:
+    <<: *kafka-base
+    profiles: ["connect"]
+    hostname: connect
+    container_name: connect
+    ports:
+      - "8083:8083"
+    command: ["/opt/kafka/bin/connect-distributed.sh", "/etc/kafka-connect/connect-distributed.properties"]
+    environment:
+      KAFKA_HEAP_OPTS: ${CONNECT_HEAP_OPTS}
+      KAFKA_OPTS: "-javaagent:/opt/jmx-exporter/jmx_prometheus_javaagent.jar=9404:/opt/jmx-exporter/kafka-connect.yml"
+    volumes:
+      - ./config/connect/connect-distributed.properties:/etc/kafka-connect/connect-distributed.properties:ro
+      - *jmx-volume
+      - ./connect/plugins:/opt/connect-plugins:ro
+      - ./connect/data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8083/connectors"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    depends_on: *depends-on-brokers
+
+  postgres:
+    image: ${POSTGRES_IMAGE}
+    profiles: ["connect"]
+    hostname: postgres
+    container_name: postgres
+    restart: unless-stopped
+    networks:
+      - kafka-net
+    command: ["postgres", "-c", "wal_level=logical", "-c", "max_replication_slots=10", "-c", "max_wal_senders=10"]
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: "formation"
+    volumes:
+      - ./config/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d formation"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ===========================================================================
+  #  Profils "schema" et "ksqldb" : Schema Registry et ksqlDB (Confluent Community)
+  # ===========================================================================
+  schema-registry:
+    image: ${SCHEMA_REGISTRY_IMAGE}
+    profiles: ["schema", "ksqldb"]
+    hostname: schema-registry
+    container_name: schema-registry
+    restart: unless-stopped
+    networks:
+      - kafka-net
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: "schema-registry"
+      SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "PLAINTEXT://broker-1:19092,PLAINTEXT://broker-2:19092,PLAINTEXT://broker-3:19092"
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC: "_schemas"
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC_REPLICATION_FACTOR: 3
+      SCHEMA_REGISTRY_SCHEMA_COMPATIBILITY_LEVEL: "backward"
+      SCHEMA_REGISTRY_HEAP_OPTS: "-Xms256m -Xmx512m"
+    volumes:
+      - ./data/avro:/data/avro:ro
+    depends_on: *depends-on-brokers
+
+  ksqldb-server:
+    image: ${KSQLDB_IMAGE}
+    profiles: ["ksqldb"]
+    hostname: ksqldb-server
+    container_name: ksqldb-server
+    restart: unless-stopped
+    networks:
+      - kafka-net
+    ports:
+      - "8088:8088"
+    environment:
+      KSQL_CONFIG_DIR: "/etc/ksql"
+      KSQL_BOOTSTRAP_SERVERS: "broker-1:19092,broker-2:19092,broker-3:19092"
+      KSQL_HOST_NAME: "ksqldb-server"
+      KSQL_LISTENERS: "http://0.0.0.0:8088"
+      KSQL_CACHE_MAX_BYTES_BUFFERING: 0
+      KSQL_KSQL_SERVICE_ID: "formation_"
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      KSQL_KSQL_INTERNAL_TOPIC_REPLICAS: 3
+      KSQL_KSQL_INTERNAL_TOPIC_MIN_INSYNC_REPLICAS: 2
+      KSQL_KSQL_STREAMS_REPLICATION_FACTOR: 3
+      KSQL_KSQL_STREAMS_AUTO_OFFSET_RESET: "earliest"
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_REPLICATION_FACTOR: 3
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+      KSQL_HEAP_OPTS: "-Xms512m -Xmx1g"
+    depends_on:
+      <<: *depends-on-brokers
+      schema-registry:
+        condition: service_started
+
+  # ===========================================================================
+  #  Profil "mirror" : cluster de secours (1 noeud combiné) + MirrorMaker 2
+  # ===========================================================================
+  kafka-dr:
+    <<: *kafka-base
+    profiles: ["mirror"]
+    hostname: kafka-dr
+    container_name: kafka-dr
+    ports:
+      - "9292:9292"
+    environment:
+      CLUSTER_ID: ${DR_CLUSTER_ID}
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka-dr:9093"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_LISTENERS: "INTERNAL://:19092,EXTERNAL://:9292,CONTROLLER://:9093"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka-dr:19092,EXTERNAL://localhost:9292"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_SHARE_COORDINATOR_STATE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_SHARE_COORDINATOR_STATE_TOPIC_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_HEAP_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - kafka-dr-data:/var/lib/kafka/data
+    healthcheck: *broker-healthcheck
+
+  mirror-maker:
+    <<: *kafka-base
+    profiles: ["mirror"]
+    hostname: mirror-maker
+    container_name: mirror-maker
+    command: ["/opt/kafka/bin/connect-mirror-maker.sh", "/etc/mm2/mm2.properties"]
+    environment:
+      KAFKA_HEAP_OPTS: "-Xms256m -Xmx512m"
+    volumes:
+      - ./config/mm2/mm2.properties:/etc/mm2/mm2.properties:ro
+    depends_on:
+      <<: *depends-on-brokers
+      kafka-dr:
+        condition: service_healthy
+
+  # ===========================================================================
+  #  Profil "consoles" : AKHQ (console web alternative) : http://localhost:8090
+  # ===========================================================================
+  akhq:
+    image: ${AKHQ_IMAGE}
+    profiles: ["consoles"]
+    container_name: akhq
+    restart: unless-stopped
+    networks:
+      - kafka-net
+    ports:
+      - "8090:8080"
+    environment:
+      AKHQ_CONFIGURATION: |
+        akhq:
+          connections:
+            kafka-kraft:
+              properties:
+                bootstrap.servers: "broker-1:19092,broker-2:19092,broker-3:19092"
+              schema-registry:
+                url: "http://schema-registry:8081"
+              connect:
+                - name: "connect"
+                  url: "http://connect:8083"
+    depends_on: *depends-on-brokers
+
+networks:
+  kafka-net:
+    name: kafka-net
+
+volumes:
+  controller-1-data:
+  controller-2-data:
+  controller-3-data:
+  broker-1-data:
+  broker-2-data:
+  broker-3-data:
+  broker-4-data:
+  kafka-dr-data:
+  prometheus-data:
+  grafana-data:
