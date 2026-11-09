@@ -1,0 +1,77 @@
+# =============================================================================
+#  Prometheus - collecte des métriques du cluster Kafka KRaft
+# =============================================================================
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+  external_labels:
+    environment: formation
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  # Prometheus lui-même
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Contrôleurs KRaft (agent JMX Exporter, port 9404)
+  - job_name: kafka-controllers
+    static_configs:
+      - targets: ["controller-1:9404", "controller-2:9404", "controller-3:9404"]
+        labels:
+          role: controller
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: "([^:]+):.*"
+        target_label: instance
+        replacement: "$1"
+
+  # Brokers (agent JMX Exporter, port 9404)
+  - job_name: kafka-brokers
+    static_configs:
+      - targets: ["broker-1:9404", "broker-2:9404", "broker-3:9404"]
+        labels:
+          role: broker
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: "([^:]+):.*"
+        target_label: instance
+        replacement: "$1"
+
+  # Broker supplémentaire (profil "scale") : DOWN tant que broker-4 n'est pas démarré
+  - job_name: kafka-broker-scale
+    static_configs:
+      - targets: ["broker-4:9404"]
+        labels:
+          role: broker
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: "([^:]+):.*"
+        target_label: instance
+        replacement: "$1"
+
+  # Kafka Connect (profil "connect")
+  - job_name: kafka-connect
+    static_configs:
+      - targets: ["connect:9404"]
+        labels:
+          role: connect
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: "([^:]+):.*"
+        target_label: instance
+        replacement: "$1"
+
+  # Lag des consumer groups (kafka-exporter)
+  - job_name: kafka-exporter
+    static_configs:
+      - targets: ["kafka-exporter:9308"]
+
+  # Application Spring Boot du TP (lancée sous WSL : mvn spring-boot:run)
+  - job_name: spring-kafka-demo
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.docker.internal:8085"]

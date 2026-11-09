@@ -1,0 +1,16 @@
+# nom;partitions;facteur_de_réplication;configs (k=v séparés par des virgules)
+test-formation;3;3;
+orders;6;3;
+orders-dlt;6;3;
+orders-audit;3;3;
+orders-big;3;3;
+orders-revenue-by-country;3;3;
+transactions-in;3;3;
+transactions-out;3;3;
+words-input;3;3;
+words-output;3;3;
+streams-input;3;3;
+streams-output;3;3;
+films;1;3;
+films-json;1;3;
+customers-compacted;1;3;cleanup.policy=compact,segment.ms=10000,min.cleanable.dirty.ratio=0.01,delete.retention.ms=1000,min.compaction.lag.ms=0

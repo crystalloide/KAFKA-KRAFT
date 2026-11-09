@@ -1,0 +1,30 @@
+# =============================================================================
+#  Service systemd du noeud Kafka standalone (TP01)
+#  Installation : sed "s/@USER@/$USER/g" system/kafka-standalone.service \
+#                   | sudo tee /etc/systemd/system/kafka-standalone.service
+# =============================================================================
+[Unit]
+Description=Apache Kafka 4.4.0 - noeud standalone KRaft (formation)
+Documentation=https://kafka.apache.org/documentation/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=@USER@
+Group=@USER@
+Environment="KAFKA_HEAP_OPTS=-Xms512m -Xmx512m"
+Environment="LOG_DIR=/var/log/kafka-standalone"
+ExecStart=/opt/kafka/bin/kafka-server-start.sh /opt/kafka/config/standalone/server.properties
+# SIGTERM déclenche l'arrêt contrôlé de Kafka ; 143 = arrêt normal sur SIGTERM
+KillSignal=SIGTERM
+TimeoutStopSec=120
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=10
+# Réglages "production" : descripteurs de fichiers et processus
+LimitNOFILE=100000
+LimitNPROC=65536
+
+[Install]
+WantedBy=multi-user.target

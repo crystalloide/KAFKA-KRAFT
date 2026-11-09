@@ -1,0 +1,3 @@
+{"schema":{"type":"struct","name":"film","optional":false,"fields":[{"field":"DateFilm","type":"string","optional":false},{"field":"TitreFilm","type":"string","optional":false}]},"payload":{"DateFilm":"2022","TitreFilm":"Top Gun Maverick"}}
+{"schema":{"type":"struct","name":"film","optional":false,"fields":[{"field":"DateFilm","type":"string","optional":false},{"field":"TitreFilm","type":"string","optional":false}]},"payload":{"DateFilm":"1999","TitreFilm":"Matrix"}}
+{"schema":{"type":"struct","name":"film","optional":false,"fields":[{"field":"DateFilm","type":"string","optional":false},{"field":"TitreFilm","type":"string","optional":false}]},"payload":{"DateFilm":"2010","TitreFilm":"Inception"}}

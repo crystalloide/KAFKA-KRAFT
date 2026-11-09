@@ -1,0 +1,7 @@
+Kafka est une plateforme de streaming d evenements distribuee
+Un topic est decoupe en partitions repliquees sur plusieurs brokers
+Les producers ecrivent les evenements dans les partitions du topic
+Les consumers lisent les evenements et memorisent leur offset
+Un consumer group partage les partitions entre ses membres
+Kafka Streams transforme les evenements d un topic vers un autre topic
+Le mode KRaft remplace ZooKeeper par un quorum de controleurs

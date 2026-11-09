@@ -1,0 +1,14 @@
+{
+  "connector.class": "io.debezium.connector.jdbc.JdbcSinkConnector",
+  "tasks.max": "1",
+  "topics": "pg.inventory.customers",
+  "connection.url": "jdbc:postgresql://postgres:5432/formation",
+  "connection.username": "postgres",
+  "connection.password": "postgres",
+  "insert.mode": "upsert",
+  "delete.enabled": "true",
+  "primary.key.mode": "record_key",
+  "schema.evolution": "basic",
+  "collection.name.format": "replica_${source.table}",
+  "use.time.zone": "UTC"
+}

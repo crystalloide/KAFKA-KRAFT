@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "Order",
+  "namespace": "fr.formation.kafka.avro",
+  "doc": "Commande - version 2 : ajout d'un champ optionnel AVEC valeur par défaut (compatible BACKWARD)",
+  "fields": [
+    {"name": "orderId",    "type": "string"},
+    {"name": "customerId", "type": "string"},
+    {"name": "product",    "type": "string"},
+    {"name": "quantity",   "type": "int"},
+    {"name": "unitPrice",  "type": "double"},
+    {"name": "country",    "type": "string", "default": "FR"}
+  ]
+}

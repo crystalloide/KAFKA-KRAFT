@@ -1,0 +1,13 @@
+# =============================================================================
+#  %UserProfile%\.wslconfig (côté WINDOWS) - ressources de la VM WSL2
+#  Exemple pour un poste de 16 Go de RAM (32 Go conseillés pour tout lancer)
+#  Prise en compte : "wsl --shutdown" depuis PowerShell, puis relancer Ubuntu
+# =============================================================================
+[wsl2]
+memory=12GB
+processors=6
+swap=4GB
+# localhost de Windows redirigé vers WSL (navigateur -> Kafka UI, Grafana...)
+localhostForwarding=true
+# Paramètre noyau appliqué dès le démarrage de la VM
+kernelCommandLine=sysctl.vm.max_map_count=262144

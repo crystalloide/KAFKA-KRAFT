@@ -1,0 +1,104 @@
+# =============================================================================
+#  Règles d'alerte Prometheus - seuils recommandés pour un cluster Kafka KRaft
+#  (visibles dans http://localhost:9090/alerts)
+# =============================================================================
+groups:
+  - name: kafka-cluster
+    rules:
+      - alert: KafkaBrokerDown
+        expr: up{job="kafka-brokers"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Broker {{ $labels.instance }} injoignable"
+          description: "L'agent JMX du broker {{ $labels.instance }} ne répond plus depuis 1 minute."
+
+      - alert: KafkaControllerDown
+        expr: up{job="kafka-controllers"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Contrôleur {{ $labels.instance }} injoignable"
+          description: "Le quorum KRaft tolère la perte de (N-1)/2 contrôleurs : 1 sur 3."
+
+      - alert: KafkaActiveControllerCountNot1
+        expr: sum(kafka_controller_kafkacontroller_activecontrollercount) != 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Nombre de contrôleurs actifs = {{ $value }} (attendu : 1)"
+          description: "0 = quorum perdu (plus de leader Raft), >1 = situation anormale."
+
+      - alert: KafkaOfflinePartitions
+        expr: max(kafka_controller_kafkacontroller_offlinepartitionscount) > 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $value }} partition(s) hors ligne (sans leader)"
+          description: "Des partitions n'ont plus de leader : production et consommation impossibles."
+
+      - alert: KafkaUnderMinIsrPartitions
+        expr: sum(kafka_server_replicamanager_underminisrpartitioncount) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $value }} partition(s) sous min.insync.replicas"
+          description: "Les producteurs en acks=all reçoivent NotEnoughReplicas."
+
+      - alert: KafkaUnderReplicatedPartitions
+        expr: sum(kafka_server_replicamanager_underreplicatedpartitions) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $value }} partition(s) sous-répliquée(s)"
+          description: "Au moins un réplica n'est plus dans l'ISR (broker arrêté, disque ou réseau lent)."
+
+      - alert: KafkaFencedBrokers
+        expr: max(kafka_controller_kafkacontroller_fencedbrokercount) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $value }} broker(s) isolé(s) (fenced) par le contrôleur"
+
+      - alert: KafkaRequestHandlerSaturation
+        expr: kafka_server_request_handler_avg_idle_percent < 0.3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Threads I/O du broker {{ $labels.instance }} saturés (idle < 30 %)"
+          description: "Envisager d'augmenter num.io.threads ou d'ajouter des brokers."
+
+      - alert: KafkaNetworkProcessorSaturation
+        expr: kafka_network_socketserver_networkprocessoravgidlepercent < 0.3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Threads réseau du broker {{ $labels.instance }} saturés (idle < 30 %)"
+          description: "Envisager d'augmenter num.network.threads."
+
+      - alert: KafkaJvmHeapHigh
+        expr: jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Heap JVM de {{ $labels.instance }} > 85 %"
+
+  - name: kafka-consumers
+    rules:
+      - alert: KafkaConsumerGroupLagHigh
+        expr: sum by (consumergroup, topic) (kafka_consumergroup_lag) > 1000
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Lag de {{ $value }} messages pour le groupe {{ $labels.consumergroup }} sur {{ $labels.topic }}"

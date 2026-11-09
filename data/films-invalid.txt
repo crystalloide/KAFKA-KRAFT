@@ -1,0 +1,2 @@
+ceci n'est pas du JSON
+{"payload": "JSON sans schéma alors que schemas.enable=true"}

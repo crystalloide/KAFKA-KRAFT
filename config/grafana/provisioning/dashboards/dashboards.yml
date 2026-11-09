@@ -1,0 +1,14 @@
+# Tableaux de bord provisionnés automatiquement depuis /etc/grafana/dashboards
+apiVersion: 1
+
+providers:
+  - name: kafka-kraft
+    orgId: 1
+    folder: Kafka
+    type: file
+    disableDeletion: false
+    allowUiUpdates: true
+    updateIntervalSeconds: 30
+    options:
+      path: /etc/grafana/dashboards
+      foldersFromFilesStructure: false

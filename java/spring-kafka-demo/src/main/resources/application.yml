@@ -1,0 +1,59 @@
+# =============================================================================
+#  spring-kafka-demo - configuration (Spring Boot 4.1 / Spring for Apache Kafka 4.1)
+# =============================================================================
+server:
+  port: 8085                     # 8080 est utilisé par Kafka UI
+
+spring:
+  application:
+    name: spring-kafka-demo
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092,localhost:9094,localhost:9096}
+    client-id: spring-kafka-demo
+    producer:
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      compression-type: lz4
+      properties:
+        enable.idempotence: true
+        linger.ms: 20
+    consumer:
+      group-id: order-service
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      isolation-level: read-committed
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # ErrorHandlingDeserializer : un message illisible ne bloque pas le consumer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+        spring.json.trusted.packages: fr.formation.kafka.spring.model
+        spring.json.value.default.type: fr.formation.kafka.spring.model.Order
+    listener:
+      ack-mode: manual           # le listener appelle Acknowledgment.acknowledge()
+      missing-topics-fatal: false
+    admin:
+      auto-create: true          # les beans NewTopic sont créés au démarrage
+    streams:
+      application-id: spring-orders-streams
+
+# Kafka Streams (TP07b) : désactivé par défaut, activable avec --app.streams.enabled=true
+app:
+  streams:
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    org.apache.kafka: WARN
+    fr.formation.kafka: INFO

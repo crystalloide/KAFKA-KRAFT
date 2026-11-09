@@ -1,0 +1,15 @@
+{
+  "type": "record",
+  "name": "Order",
+  "namespace": "fr.formation.kafka.avro",
+  "doc": "Commande - version 3 : ajout d'un champ obligatoire SANS valeur par défaut (INCOMPATIBLE BACKWARD)",
+  "fields": [
+    {"name": "orderId",    "type": "string"},
+    {"name": "customerId", "type": "string"},
+    {"name": "product",    "type": "string"},
+    {"name": "quantity",   "type": "int"},
+    {"name": "unitPrice",  "type": "double"},
+    {"name": "country",    "type": "string", "default": "FR"},
+    {"name": "vatRate",    "type": "double"}
+  ]
+}

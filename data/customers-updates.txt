@@ -1,0 +1,8 @@
+C-001:{"name":"Alice Martin","city":"Paris","loyalty":"STANDARD"}
+C-002:{"name":"Bruno Bernard","city":"Lyon","loyalty":"STANDARD"}
+C-003:{"name":"Chloe Dubois","city":"Marseille","loyalty":"SILVER"}
+C-001:{"name":"Alice Martin","city":"Paris","loyalty":"SILVER"}
+C-002:{"name":"Bruno Bernard","city":"Grenoble","loyalty":"STANDARD"}
+C-001:{"name":"Alice Martin","city":"Versailles","loyalty":"GOLD"}
+C-004:{"name":"David Thomas","city":"Toulouse","loyalty":"STANDARD"}
+C-003:NULL
