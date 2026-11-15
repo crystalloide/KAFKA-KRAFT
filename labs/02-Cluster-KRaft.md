@@ -22,18 +22,18 @@
 
 ```text
                       Quorum KRaft (Raft) - métadonnées du cluster (__cluster_metadata)
-             ┌───────────────────┐   ┌───────────────────┐   ┌───────────────────┐
-             │ controller-1 (1)  │   │ controller-2 (2)  │   │ controller-3 (3)  │
-             │  leader (actif)   │◄─►│  follower (voter) │◄─►│  follower (voter) │
-             └─────────▲─────────┘   └───────────────────┘   └───────────────────┘
-                       │ enregistrement, heartbeats, réplication des métadonnées (port 9093)
-     ┌─────────────────┼──────────────────┬────────────────────────────────────┐
-┌────┴─────────┐ ┌─────┴────────┐ ┌───────┴───────┐                  (broker-4, node 14,
-│ broker-1 (11)│ │ broker-2 (12)│ │ broker-3 (13) │                   profil "scale")
-│ rack-a       │ │ rack-b       │ │ rack-c        │
-│ INTERNAL:19092 │ INTERNAL:19092 │ INTERNAL:19092│  <- réseau Docker (réplication, Connect, UI...)
-│ EXTERNAL:9092  │ EXTERNAL:9094  │ EXTERNAL:9096 │  <- hôte WSL / Windows (CLI, Java, IntelliJ)
-└──────────────┘ └──────────────┘ └───────────────┘
+                  ┌───────────────────┐   ┌───────────────────┐   ┌───────────────────┐
+                  │ controller-1 (1)  │   │ controller-2 (2)  │   │ controller-3 (3)  │
+                  │  leader (actif)   │◄─►│  follower (voter) │◄─►│  follower (voter) │
+                  └─────────▲─────────┘   └───────────────────┘   └───────────────────┘
+                            │ enregistrement, heartbeats, réplication des métadonnées (port 9093)
+         ┌──────────────────┼──────────────────┬──────────────────────────────────┐
+┌────────┴───────┐ ┌────────┴───────┐ ┌────────┴───────┐                 (broker-4, node 14,
+│ broker-1 (11)  │ │ broker-2 (12)  │ │ broker-3 (13)  │                   profil "scale")
+│ rack-a         │ │ rack-b         │ │ rack-c         │
+│ INTERNAL:19092 │ │ INTERNAL:19092 │ │ INTERNAL:19092 │  <- réseau Docker (réplication, Connect, UI, ...)
+│ EXTERNAL:9092  │ │ EXTERNAL:9094  │ │ EXTERNAL:9096  │  <- hôte WSL / Windows (CLI, Java, IntelliJ)
+└────────────────┘ └────────────────┘ └────────────────┘
 ```
 
 | Notion | Description |
