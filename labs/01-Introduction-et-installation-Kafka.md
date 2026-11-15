@@ -134,7 +134,17 @@ Ajouter les outils au `PATH` pour tous les utilisateurs :
 
 ```bash
 printf 'export KAFKA_HOME=/opt/kafka\nexport PATH=$PATH:$KAFKA_HOME/bin\n' | sudo tee /etc/profile.d/kafka.sh
+```
+```bash
 source /etc/profile.d/kafka.sh
+```
+```bash
+sudo su - user -c "echo -e '\n# Kafka configuration\nexport KAFKA_HOME=/opt/kafka\nexport PATH=\$PATH:\$KAFKA_HOME/bin' >> ~/.bashrc"
+```
+```bash
+source /etc/profile.d/kafka.sh
+```
+```bash
 kafka-topics.sh --version
 ```
 
