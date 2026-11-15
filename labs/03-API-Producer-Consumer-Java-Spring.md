@@ -942,6 +942,7 @@ Arrêtez **tous** les consumers du groupe, produisez des messages, puis :
 cd ~/KAFKA-KRAFT/java/kafka-java-native && ./run.sh producer.OrderProducer orders
 ```
 ```bash
+source ~/KAFKA-KRAFT/scripts/kafka-env.sh
 kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --describe --group groupe-commandes
 ```
 
@@ -1119,6 +1120,7 @@ Le consumer s'arrête brutalement **avant** de commiter `crash`. Relancez-le : `
 message pour en sortir :
 
 ```bash
+source ~/KAFKA-KRAFT/scripts/kafka-env.sh
 kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --group groupe-manuel --topic test-formation --reset-offsets --to-latest --execute
 ```
 
@@ -1276,10 +1278,12 @@ EOF_KAFKA_KRAFT
 Deux consumers console, l'un en `read_uncommitted` (défaut), l'autre en `read_committed` :
 
 ```bash
+source ~/KAFKA-KRAFT/scripts/kafka-env.sh
 kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic transactions-in --isolation-level read_uncommitted
 ```
 
 ```bash
+source ~/KAFKA-KRAFT/scripts/kafka-env.sh
 kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic transactions-in --isolation-level read_committed
 ```
 
