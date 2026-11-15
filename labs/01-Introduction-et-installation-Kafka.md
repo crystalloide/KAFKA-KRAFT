@@ -500,6 +500,14 @@ CreateTime:1762700100200	Partition:0	Offset:2	client-1	commande E
 > Kafka 4.2+ : `--property` (déprécié) est remplacé par `--reader-property` (producer) et
 > `--formatter-property` (consumer) ; `--producer-property`/`--consumer-property` par `--command-property`.
 
+
+> L'erreur org.apache.kafka.common.errors.TimeoutException que vous observez à la fin de l'exécution est un comportement tout à fait normal lié à l'option --timeout-ms 5000  passée dans la commande.
+
+Explication de l'erreur
+Le paramètre --timeout-ms 5000 indique au kafka-console-consumer de s'arrêter automatiquement s'il ne reçoit aucun nouveau message pendant une période de 5 000 millisecondes (5 secondes).
+
+Le consommateur a lu avec succès les 9 messages disponibles dans le topic (premier-topic). Une fois arrivé à la fin des messages existants, il est resté en écoute pendant 5 secondes. N'ayant reçu aucun nouveau message durant ce laps de temps, il a considéré qu'il était en "timeout" et a interrompu le processus.
+
 ### D.4 Lire une partition à partir d'un offset donné
 
 ```bash
