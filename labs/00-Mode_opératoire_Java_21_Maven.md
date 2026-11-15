@@ -90,3 +90,16 @@ Vérifiez ensuite que Maven fonctionne et utilise la bonne version de Java :
 mvn -v
 ```
 *(Maven doit démarrer sans erreur de variable d'environnement et afficher le runtime Java 21).*
+
+---
+
+### 3.1 : (optionnel) : désactivation UFW et Apparmor (en Dévt uniquement) : 
+
+```bash
+sudo systemctl disable apparmor
+sudo systemctl disable ufw
+sudo systemctl stop apparmor
+sudo systemctl stop ufw
+sudo systemctl status apparmor
+sudo systemctl status ufw
+```
