@@ -1283,8 +1283,16 @@ kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic transactions-in 
 ```
 
 ```bash
+kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic transactions-in --isolation-level read_uncommitted --from-beginning
+```
+
+```bash
 source ~/KAFKA-KRAFT/scripts/kafka-env.sh
 kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic transactions-in --isolation-level read_committed
+```
+
+```bash
+kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic transactions-in --isolation-level read_committed --from-beginning
 ```
 
 ```bash
