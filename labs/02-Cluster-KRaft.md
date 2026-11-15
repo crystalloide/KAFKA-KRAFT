@@ -1445,10 +1445,19 @@ kafka-producer-perf-test.sh --bootstrap-server $BOOTSTRAP --topic resilience \
 Dans un autre terminal :
 
 ```bash
+source ~/KAFKA-KRAFT/scripts/kafka-env.sh
+```
+```bash
 docker compose -f ~/KAFKA-KRAFT/docker-compose.yml stop broker-2
+```
+```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --describe --topic resilience
+```
+```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --describe --under-replicated-partitions
 ```
+
+Affichage : 
 
 ```text
 	Topic: resilience	Partition: 0	Leader: 13	Replicas: 12,13,11	Isr: 13,11	...
