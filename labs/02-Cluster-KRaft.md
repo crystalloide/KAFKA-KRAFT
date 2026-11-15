@@ -56,7 +56,7 @@
 | Paramètre | Valeur | Rôle |
 |---|---|---|
 | `default.replication.factor` | 3 | Chaque partition existe sur 3 brokers |
-| `min.insync.replicas` | 2 | Une écriture `acks=all` exige 2 réplicas à jour : tolère 1 panne sans perte |
+| `min.insync.replicas` | 2 | Une écriture `acks=all` exige 2 réplicas à jour : tolère 1 panne pour acquitter |
 | `offsets.topic.replication.factor`, `transaction.state.log.replication.factor` | 3 | Topics internes répliqués |
 | `transaction.state.log.min.isr` | 2 | Idem pour les transactions |
 | `auto.create.topics.enable` | false | Pas de création implicite de topics |
