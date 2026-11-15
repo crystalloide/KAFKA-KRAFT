@@ -430,6 +430,10 @@ Topic: premier-topic	TopicId: ...	PartitionCount: 3	ReplicationFactor: 1	Configs
 
 ```bash
 cat ~/KAFKA-KRAFT/config/standalone/server.properties | grep 'auto.create'
+```
+
+Affichage attendu en retour :
+```text
 auto.create.topics.enable=false
 ```
 
