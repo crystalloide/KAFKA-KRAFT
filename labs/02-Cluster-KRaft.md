@@ -27,8 +27,8 @@
              │  leader (actif)   │◄─►│  follower (voter) │◄─►│  follower (voter) │
              └─────────▲─────────┘   └───────────────────┘   └───────────────────┘
                        │ enregistrement, heartbeats, réplication des métadonnées (port 9093)
-     ┌─────────────────┼─────────────────────────┬──────────────────────────┐
-┌────┴─────────┐ ┌─────┴────────┐ ┌──────────────┴┐                  (broker-4, node 14,
+     ┌─────────────────┼──────────────────┬────────────────────────────────────┐
+┌────┴─────────┐ ┌─────┴────────┐ ┌───────┴───────┐                  (broker-4, node 14,
 │ broker-1 (11)│ │ broker-2 (12)│ │ broker-3 (13) │                   profil "scale")
 │ rack-a       │ │ rack-b       │ │ rack-c        │
 │ INTERNAL:19092 │ INTERNAL:19092 │ INTERNAL:19092│  <- réseau Docker (réplication, Connect, UI...)
