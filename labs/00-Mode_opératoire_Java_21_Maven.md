@@ -4,9 +4,42 @@ Ce guide résume les étapes nécessaires pour installer Java 21, configurer le 
 
 ---
 
-### Étape 1 : Installer Java 21 et configurer les alternatives
 
-Exécutez les commandes suivantes dans votre terminal WSL2 pour installer le JDK 21 et l'enregistrer auprès du système :
+### 1.1 Mettre à jour le système et installer les outils
+
+```bash
+sudo apt-get update && sudo apt-get -y upgrade
+sudo apt-get install -y curl wget git jq unzip zip tree netcat-openbsd ca-certificates gnupg kcat
+```
+
+### 1.2 Installer Java 21 (LTS) et Maven
+
+```bash
+sudo apt-get install -y openjdk-21-jdk maven
+java -version
+mvn -v
+```
+
+Affichage attendu (extraits) :
+
+```text
+openjdk version "21.0.x" ...
+Apache Maven 3.8.x ...
+Java version: 21.0.x, vendor: Ubuntu, runtime: /usr/lib/jvm/java-21-openjdk-amd64
+```
+
+Définissez `JAVA_HOME` pour toutes les sessions :
+
+```bash
+echo 'export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64' | sudo tee /etc/profile.d/java.sh
+source /etc/profile.d/java.sh
+echo $JAVA_HOME
+```
+
+
+### 1.3 : Configurer les alternatives JAVA et JAVAC : 
+
+Exécutez les commandes suivantes pour enregistrer JAVA 21 auprès du système :
 
 ```bash
 sudo apt update && sudo apt install -y openjdk-21-jdk
@@ -17,7 +50,7 @@ sudo update-alternatives --config java
 
 ---
 
-### Étape 2 : Configurer `JAVA_HOME` de manière permanente
+### 1.4 : Configurer `JAVA_HOME` de manière permanente
 
 1. Ouvrez votre fichier de configuration Bash :
    ```bash
@@ -39,7 +72,7 @@ sudo update-alternatives --config java
 
 ---
 
-### Étape 3 : Valider l'installation
+### 2.1 : Valider l'installation de JAVA et MAVEN : 
 
 Vérifiez que Java 21 est bien actif sur votre système :
 ```bash
@@ -51,7 +84,6 @@ Vérifiez que le Home Java est bien renseigné :
 ```bash
 echo $JAVA_HOME
 ```
-
 
 Vérifiez ensuite que Maven fonctionne et utilise la bonne version de Java :
 ```bash
