@@ -428,6 +428,11 @@ Topic: premier-topic	TopicId: ...	PartitionCount: 3	ReplicationFactor: 1	Configs
 > `auto.create.topics.enable=false` : écrire dans un topic inexistant échoue. C'est le réglage
 > recommandé en production (pas de topic créé par une faute de frappe, avec de mauvais paramètres).
 
+```bash
+cat ~/KAFKA-KRAFT/config/standalone/server.properties | grep 'auto.create'
+auto.create.topics.enable=false
+```
+
 ### D.2 Publier et consommer (publish / subscribe)
 
 Terminal 1 – un **consumer** qui lit depuis le début :
