@@ -360,7 +360,7 @@ grep -rnwE 'swappiness|max_map_count|dirty_ratio' /etc/sysctl.conf /etc/sysctl.d
 ```
 
 ```bash
-sudo /etc/sysctl.conf 
+sudo vi /etc/sysctl.conf 
 ```
 
 et modifier ou supprimer la line 67 (vm.swappiness = 0).
