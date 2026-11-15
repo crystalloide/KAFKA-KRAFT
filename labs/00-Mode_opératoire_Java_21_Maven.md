@@ -47,6 +47,12 @@ java -version
 ```
 *(Le retour doit indiquer une version `openjdk version "21..."`).*
 
+Vérifiez que le Home Java est bien renseigné :
+```bash
+echo $JAVA_HOME
+```
+
+
 Vérifiez ensuite que Maven fonctionne et utilise la bonne version de Java :
 ```bash
 mvn -v
