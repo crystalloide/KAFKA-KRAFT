@@ -48,6 +48,11 @@ sudo update-alternatives --config java
 ```
 *Note : Dans le menu interactif qui s'affiche, tapez le numéro correspondant à Java 21 et validez avec **Entrée**.*
 
+```bash
+sudo update-alternatives --config javac
+```
+*Note : Dans le menu interactif qui s'affiche, tapez le numéro correspondant à Java 21 et validez avec **Entrée**.*
+
 ---
 
 ### 1.4 : Configurer `JAVA_HOME` de manière permanente
