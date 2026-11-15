@@ -412,7 +412,7 @@ Classes disponibles :
   ...
 ```
 
-> **IntelliJ :** ouvrez `java/kafka-java-native/pom.xml` (cf. TP00 §6) ; chaque classe se lance par le
+> **IntelliJ :** ouvrez `/home/user/KAFKA-KRAFT/java/kafka-java-native/pom.xml` (cf. TP00 §6) ; chaque classe se lance par le
 > triangle vert à côté de `main`. Les arguments se saisissent dans *Run → Edit Configurations*.
 
 ### B.2 Premier producer : fire-and-forget, synchrone, asynchrone
