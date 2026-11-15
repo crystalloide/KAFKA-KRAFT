@@ -1621,8 +1621,14 @@ Exécution avec un débit de réplication limité à 1 Mo/s (protège les client
 
 ```bash
 kafka-reassign-partitions.sh --bootstrap-server $BOOTSTRAP --reassignment-json-file reassignment.json --execute --throttle 1048576
+```
+```bash
 kafka-configs.sh --bootstrap-server $BOOTSTRAP --entity-type brokers --describe | grep -E "Dynamic configs|throttled.rate"
+```
+```bash
 kafka-reassign-partitions.sh --bootstrap-server $BOOTSTRAP --reassignment-json-file reassignment.json --verify
+```
+```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --describe --topic orders
 ```
 
@@ -1658,14 +1664,23 @@ Le comptage doit renvoyer `0` avant l'arrêt. Après `unregister`, le broker 14 
 
 ## Partie G – Fin du TP
 
-On garde le cluster démarré pour la suite. Pour l'arrêter / le redémarrer :
+On garde le cluster démarré pour la suite. 
+
+___
+
+## A savoir : mais à ne pas faire ici : 
+
+**Pour arrêter / redémarrer le cluster :**
 
 ```bash
 cd ~/KAFKA-KRAFT
 docker compose stop          # arrêt (données conservées dans les volumes)
-docker compose up -d         # redémarrage
-./scripts/stop-all.sh --purge  # suppression complète (tous profils, volumes inclus)
 ```
+```bash
+docker compose up -d         # redémarrage
+```
+
+**Pour supprimer totalement le cluster :**
 
 ```bash
 cd ~/KAFKA-KRAFT
@@ -1690,6 +1705,13 @@ fi
 EOF_KAFKA_KRAFT
 chmod +x scripts/stop-all.sh
 ```
+
+
+```bash
+./scripts/stop-all.sh --purge  # suppression complète (tous profils, volumes inclus)
+```
+
+___
 
 ### Ce qu'il faut retenir
 
