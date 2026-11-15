@@ -211,7 +211,10 @@ Choisissez **une** des options suivantes : le résultat est le même répertoire
 
 ```bash
 cd ~
+rm -Rf ~/KAFKA-KRAFT
 git clone https://github.com/crystalloide/KAFKA-KRAFT.git
+cd ~/KAFKA-KRAFT
+ls
 ```
 
 **Option B – archive fournie par le formateur**
