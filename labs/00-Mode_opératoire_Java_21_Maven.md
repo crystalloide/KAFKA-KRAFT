@@ -21,7 +21,7 @@ sudo update-alternatives --config java
 
 1. Ouvrez votre fichier de configuration Bash :
    ```bash
-   nano ~/.bashrc
+   vi ~/.bashrc
    ```
 
 2. Ajoutez ou mettez à jour les lignes suivantes tout en bas du fichier :
