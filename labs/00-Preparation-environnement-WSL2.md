@@ -409,6 +409,13 @@ sudo cp ~/KAFKA-KRAFT/system/kafka-limits.conf /etc/security/limits.d/kafka.conf
 > conteneurs Kafka reçoivent leurs limites via `ulimits` dans `docker-compose.yml`, et le service
 > systemd du TP01 via `LimitNOFILE=100000`. Vérification dans un shell : `ulimit -n`.
 
+
+### Prendre en compte la configuration immédiatement : 
+
+```bash
+sudo sysctl --system
+```
+
 ### 5.3 Système de fichiers (pour information)
 
 En production : disques dédiés (SSD/NVMe), système de fichiers **XFS** ou **ext4**, option de montage
