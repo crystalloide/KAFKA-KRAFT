@@ -61,7 +61,7 @@ public class OrderController {
         for (int i = 0; i < count; i++) {
             int p = rnd.nextInt(PRODUCTS.length);
             Order order = new Order(null, "C-%03d".formatted(rnd.nextInt(1, 11)), PRODUCTS[p],
-                    rnd.nextInt(1, 6), PRICES[p], COUNTRIES[rnd.nextInt(COUNTRIES.length)], 0).withDefaults();
+                    rnd.nextInt(1, 6), PRICES[p], COUNTRIES[rnd.nextInt(COUNTRIES.length)], 0L).withDefaults();
             producer.send(order);
             ids.add(order.orderId());
         }
