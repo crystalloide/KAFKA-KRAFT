@@ -940,6 +940,8 @@ Arrêtez **tous** les consumers du groupe, produisez des messages, puis :
 
 ```bash
 cd ~/KAFKA-KRAFT/java/kafka-java-native && ./run.sh producer.OrderProducer orders
+```
+```bash
 kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --describe --group groupe-commandes
 ```
 
@@ -953,9 +955,17 @@ Le **LAG** augmente. Repositionnement (le groupe doit être **inactif**) :
 
 ```bash
 kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --group groupe-commandes --topic orders --reset-offsets --to-earliest --dry-run
+```
+```bash
 kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --group groupe-commandes --topic orders --reset-offsets --to-earliest --execute
+```
+```bash
 kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --group groupe-commandes --topic orders --reset-offsets --shift-by -5 --execute
+```
+```bash
 kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --group groupe-commandes --topic orders:0,1 --reset-offsets --to-offset 10 --execute
+```
+```bash
 kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --group groupe-commandes --topic orders --reset-offsets \
   --to-datetime "$(date -u -d '-15 minutes' +%Y-%m-%dT%H:%M:%S.000)" --execute
 ```
