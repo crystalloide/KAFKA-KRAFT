@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.UUID;
 
 public record Order(String orderId, String customerId, String product,
-                    int quantity, double unitPrice, String country, long ts) {
+                    int quantity, double unitPrice, String country, Long ts) {
 
     @JsonCreator
     public Order(
@@ -15,7 +15,7 @@ public record Order(String orderId, String customerId, String product,
             @JsonProperty("quantity") int quantity,
             @JsonProperty("unitPrice") double unitPrice,
             @JsonProperty("country") String country,
-            @JsonProperty("ts") long ts) {
+            @JsonProperty("ts") Long ts) {
         this.orderId = orderId;
         this.customerId = customerId;
         this.product = product;
@@ -34,7 +34,7 @@ public record Order(String orderId, String customerId, String product,
                 quantity,
                 unitPrice,
                 country == null || country.isBlank() ? "FR" : country,
-                ts == 0 ? System.currentTimeMillis() : ts);
+                ts == null || ts == 0 ? System.currentTimeMillis() : ts);
     }
 
     public double amount() {
