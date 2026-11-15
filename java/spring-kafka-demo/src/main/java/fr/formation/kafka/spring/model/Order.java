@@ -1,12 +1,29 @@
 package fr.formation.kafka.spring.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.UUID;
 
-/**
- * Commande - même format JSON que les exemples Java natifs (OrderProducer).
- */
 public record Order(String orderId, String customerId, String product,
                     int quantity, double unitPrice, String country, long ts) {
+
+    @JsonCreator
+    public Order(
+            @JsonProperty("orderId") String orderId,
+            @JsonProperty("customerId") String customerId,
+            @JsonProperty("product") String product,
+            @JsonProperty("quantity") int quantity,
+            @JsonProperty("unitPrice") double unitPrice,
+            @JsonProperty("country") String country,
+            @JsonProperty("ts") long ts) {
+        this.orderId = orderId;
+        this.customerId = customerId;
+        this.product = product;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+        this.country = country;
+        this.ts = ts;
+    }
 
     /** Complète une commande reçue par l'API REST (identifiant, horodatage, pays). */
     public Order withDefaults() {
