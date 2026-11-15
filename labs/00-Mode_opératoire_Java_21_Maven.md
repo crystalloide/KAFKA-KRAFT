@@ -68,11 +68,13 @@ sudo update-alternatives --config javac
    export PATH=$JAVA_HOME/bin:$PATH
    ```
 
-3. Avec **nano** : Enregistrez et quittez (`Ctrl + O`, puis `Entrée`, puis `Ctrl + X`).
+Rappel sur l'éditeur :
+
+- Avec **nano** : Enregistrez et quittez (`Ctrl + O`, puis `Entrée`, puis `Ctrl + X`).
+- 
+- Avec **vi** : Enregistrez et quittez (quitter le mode insertion `I`, puis `:wq`, puis `Entrée`).
    
-4. Avec **vi** : Enregistrez et quittez (quitter le mode insertion `I`, puis `:wq`, puis `Entrée`).
-   
-5. Appliquez les modifications à votre session en cours :
+3. Appliquez les modifications à votre session en cours :
    ```bash
    source ~/.bashrc
    ```
