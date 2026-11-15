@@ -533,8 +533,12 @@ kafka-console-consumer.sh --bootstrap-server localhost:9192 --topic premier-topi
 ```
 
 Terminal 2 : envoyez une dizaine de messages avec des clés différentes (`a:1`, `b:2`, `c:3`, ...).
-Observez : les deux consumers de `facturation` **se répartissent** les partitions, le consumer
-`analytique` reçoit **tout**. Puis, dans un autre terminal :
+
+Observez : 
+- les deux consumers du même consummer group `facturation` **se répartissent** les partitions,
+- le consumer unique du consummer group `analytique` reçoit **tout**. 
+
+Puis, dans un autre terminal :
 
 ```bash
 kafka-consumer-groups.sh --bootstrap-server localhost:9192 --list
