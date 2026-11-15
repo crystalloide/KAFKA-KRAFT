@@ -2187,9 +2187,12 @@ invalides `ORD-0017` et `ORD-0042` partent en DLT (voir C.4).
 Dans un autre terminal :
 
 ```bash
-curl -s -X POST localhost:8085/api/orders -H 'Content-Type: application/json' \
-  -d '{"customerId":"C-001","product":"Clavier","quantity":2,"unitPrice":49.9,"country":"FR"}' | jq
+curl -s -X POST localhost:8085/api/orders -H 'Content-Type: application/json' -d '{"customerId":"C-001","product":"Clavier","quantity":2,"unitPrice":49.9,"country":"FR"}' | jq
+```
+```bash
 curl -s -X POST "localhost:8085/api/orders/random?count=20" | jq '.sent'
+```
+```bash
 kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --describe --group order-service --members
 ```
 
