@@ -352,6 +352,38 @@ vm.max_map_count = 262144
 | `net.core.*mem_max`, `tcp_*mem` | 2 Mo | Tampons TCP plus grands pour la réplication et les clients distants |
 | `fs.file-max` | 1 000 000 | Plafond système du nombre de fichiers ouverts |
 
+
+#### Remarque en cas de paramètres en doublons :
+
+```bash
+grep -rnwE 'swappiness|max_map_count|dirty_ratio' /etc/sysctl.conf /etc/sysctl.d/ /usr/lib/sysctl.d/
+```
+
+```bash
+sudo /etc/sysctl.conf 
+```
+
+et modifier ou supprimer la line 67 (vm.swappiness = 0).
+
+```bash
+sudo rm /etc/sysctl.d/10-map-count.conf
+```
+
+Verification: 
+
+```bash
+sudo cp ~/KAFKA-KRAFT/system/99-kafka.conf /etc/sysctl.d/99-kafka.conf
+sudo sysctl --system | grep -E 'swappiness|max_map_count|dirty_ratio'
+```
+
+Affichage attendu :
+
+```text
+vm.swappiness = 1
+vm.dirty_ratio = 60
+vm.max_map_count = 262144
+```
+
 ### 5.2 Limites par utilisateur : `/etc/security/limits.d/kafka.conf`
 
 ```bash
