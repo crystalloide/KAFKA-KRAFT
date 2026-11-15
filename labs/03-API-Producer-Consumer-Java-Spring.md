@@ -24,11 +24,12 @@
 ### A.1 Chemin d'un message côté producer
 
 ```text
-send(record) ─► Serializer ─► Partitioner ─► RecordAccumulator (lots par partition) ─► Sender ─► broker leader
-                (clé/valeur     (hash(clé) % N     batch.size, linger.ms,              (acks, retries,   │
-                 -> octets)      ou sticky)         compression.type, buffer.memory)    in-flight)       ▼
-                                                                                    réplication vers l'ISR
-callback(metadata, exception) ◄──────────────────────── acquittement ◄───────────────────────────────┘
+send(record) ─► Serializer ───► Partitioner ───────► RecordAccumulator (lots par partition) ───► Sender ───────────► broker leader
+                (clé/valeur     (hash(clé) % N       batch.size, linger.ms,                      (acks, retries,            │
+                 -> octets)      ou sticky)          compression.type, buffer.memory)            in-flight)                 ▼
+                                                                                                                            │  
+                                                                                                                  réplication vers l'ISR
+callback(metadata, exception) ◄──────────────────────── acquittement ◄──────────────────────────────────────────────────────┘
 ```
 
 | Paramètre producer | Défaut (4.4) | Recommandation |
