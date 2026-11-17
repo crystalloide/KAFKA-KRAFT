@@ -307,7 +307,11 @@ Dans un **second terminal** :
 
 ```bash
 ss -tlnp | grep -E ':919[23]'
+```
+```bash
 kafka-metadata-quorum.sh --bootstrap-server localhost:9192 describe --status
+```
+```bash
 kafka-features.sh --bootstrap-server localhost:9192 describe
 ```
 
@@ -413,7 +417,11 @@ export BS=localhost:9192
 
 ```bash
 kafka-topics.sh --bootstrap-server $BS --create --topic premier-topic --partitions 3 --replication-factor 1
+```
+```bash
 kafka-topics.sh --bootstrap-server $BS --list
+```
+```bash
 kafka-topics.sh --bootstrap-server $BS --describe --topic premier-topic
 ```
 
@@ -589,9 +597,17 @@ baseOffset: 0 lastOffset: 0 count: 1 ... CreateTime: ... size: ... compresscodec
 docker run -d --rm --name kafka-test -p 9092:9092 apache/kafka:4.4.0
 sleep 15
 docker logs kafka-test | grep -m1 "Kafka Server started"
+```
+```bash
 kafka-topics.sh --bootstrap-server localhost:9092 --create --topic test-docker --partitions 1 --replication-factor 1
+```
+```bash
 kafka-topics.sh --bootstrap-server localhost:9092 --list
+```
+```bash
 docker exec -e KAFKA_OPTS= kafka-test /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
+```
+```bash
 docker stop kafka-test
 ```
 
