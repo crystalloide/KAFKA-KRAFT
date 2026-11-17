@@ -501,8 +501,9 @@ kafka-console-producer.sh --bootstrap-server localhost:9192 --topic premier-topi
 >Troisième message
 ```
 
-Les messages apparaissent dans le terminal 1. Quittez le consumer (Ctrl+C) puis relancez-le **sans**
-`--from-beginning` : il n'affiche plus rien (position par défaut = fin du journal, `latest`).
+Les messages apparaissent dans le terminal 1. 
+
+Quittez le consumer **(Ctrl+C)** puis relancez-le **sans** `--from-beginning` : il n'affiche plus rien (position par défaut = fin du journal, `latest`).
 
 ### D.3 Messages avec clé : partitionnement et ordre
 
