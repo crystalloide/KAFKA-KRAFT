@@ -624,6 +624,8 @@ analytique
 facturation
 ```
 
+Regardons plus en détail le consumer group **facturation** :
+
 ```bash
 kafka-consumer-groups.sh --bootstrap-server localhost:9192 --describe --group facturation
 ```
