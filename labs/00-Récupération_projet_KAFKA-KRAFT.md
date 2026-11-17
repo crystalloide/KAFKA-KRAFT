@@ -36,7 +36,6 @@
 ### 0. Vérifier les pré-requis d'installation
 
 ```bash
-sudo apt-get install -y openjdk-21-jdk maven
 java -version
 mvn -v
 ```
