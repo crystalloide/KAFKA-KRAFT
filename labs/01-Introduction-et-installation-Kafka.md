@@ -417,7 +417,7 @@ export BS=localhost:9192
 
 1. Ouvrez votre fichier de configuration Bash :
    ```bash
-   vi ~/.bashrc
+vi ~/.bashrc
    ```
 
 2. Ajoutez ou mettez à jour les lignes suivantes tout en bas du fichier :
@@ -427,9 +427,13 @@ export BS=localhost:9192
 
 3. Appliquez les modifications à votre session en cours :
    ```bash
-   source ~/.bashrc
+source ~/.bashrc
    ```
 
+4. Vérification sur un nouveau terminal linux :
+   ```bash
+echo $BS
+   ```
 
 ### D.1 Topics
 
