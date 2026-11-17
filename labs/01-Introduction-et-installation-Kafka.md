@@ -416,24 +416,24 @@ export BS=localhost:9192
 ### Ajout de manière permanente :
 
 1. Ouvrez votre fichier de configuration Bash :
-   ```bash
+```bash
 vi ~/.bashrc
-   ```
+```
 
 2. Ajoutez ou mettez à jour les lignes suivantes tout en bas du fichier :
-   ```bash
+```bash
 export BS=localhost:9192
-   ```
+```
 
 3. Appliquez les modifications à votre session en cours :
-   ```bash
+```bash
 source ~/.bashrc
-   ```
+```
 
 4. Vérification sur un nouveau terminal linux :
-   ```bash
+```bash
 echo $BS
-   ```
+```
 
 ### D.1 Topics
 
