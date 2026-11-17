@@ -239,6 +239,7 @@ Installation du fichier et des répertoires de données et de logs :
 ```bash
 mkdir -p /opt/kafka/config/standalone
 cp ~/KAFKA-KRAFT/config/standalone/server.properties /opt/kafka/config/standalone/
+sudo rm -Rf /var/lib/kafka-standalone/data /var/log/kafka-standalone
 sudo mkdir -p /var/lib/kafka-standalone/data /var/log/kafka-standalone
 sudo chown -R "$USER":"$USER" /var/lib/kafka-standalone /var/log/kafka-standalone
 ```
