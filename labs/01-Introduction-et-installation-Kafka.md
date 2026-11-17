@@ -649,23 +649,67 @@ Arrêtez tous les consumers (Ctrl+C).
 
 ```bash
 ls /var/lib/kafka-standalone/data/
-ls -l /var/lib/kafka-standalone/data/premier-topic-0/
-kafka-dump-log.sh --print-data-log \
-  --files /var/lib/kafka-standalone/data/premier-topic-0/00000000000000000000.log | head -20
 ```
+
+Affichage :
 
 ```text
-__cluster_metadata-0  __consumer_offsets-0 ... premier-topic-0  premier-topic-1  premier-topic-2  meta.properties ...
-00000000000000000000.index  00000000000000000000.log  00000000000000000000.timeindex  leader-epoch-checkpoint  partition.metadata
-Dumping /var/lib/kafka-standalone/data/premier-topic-0/00000000000000000000.log
-Log starting offset: 0
-baseOffset: 0 lastOffset: 0 count: 1 ... CreateTime: ... size: ... compresscodec: none ...
-| offset: 0 CreateTime: ... keySize: 8 valueSize: 10 ... key: client-1 payload: commande A
+cleaner-offset-checkpoint  __consumer_offsets-15  __consumer_offsets-23  __consumer_offsets-31  __consumer_offsets-4   __consumer_offsets-48        premier-topic-0
+__cluster_metadata-0       __consumer_offsets-16  __consumer_offsets-24  __consumer_offsets-32  __consumer_offsets-40  __consumer_offsets-49        premier-topic-1
+__consumer_offsets-0       __consumer_offsets-17  __consumer_offsets-25  __consumer_offsets-33  __consumer_offsets-41  __consumer_offsets-5         premier-topic-2
+__consumer_offsets-1       __consumer_offsets-18  __consumer_offsets-26  __consumer_offsets-34  __consumer_offsets-42  __consumer_offsets-6         recovery-point-offset-checkpoint
+__consumer_offsets-10      __consumer_offsets-19  __consumer_offsets-27  __consumer_offsets-35  __consumer_offsets-43  __consumer_offsets-7         replication-offset-checkpoint
+__consumer_offsets-11      __consumer_offsets-2   __consumer_offsets-28  __consumer_offsets-36  __consumer_offsets-44  __consumer_offsets-8
+__consumer_offsets-12      __consumer_offsets-20  __consumer_offsets-29  __consumer_offsets-37  __consumer_offsets-45  __consumer_offsets-9
+__consumer_offsets-13      __consumer_offsets-21  __consumer_offsets-3   __consumer_offsets-38  __consumer_offsets-46  log-start-offset-checkpoint
+__consumer_offsets-14      __consumer_offsets-22  __consumer_offsets-30  __consumer_offsets-39  __consumer_offsets-47  meta.properties
 ```
 
-- Une partition = un répertoire ; des **segments** (`.log` + index `.index` et `.timeindex`)
+
+Remarque : 
+
 - `__consumer_offsets` : topic interne où sont stockés les offsets commités des groupes
 - `__cluster_metadata` : journal Raft des métadonnées (KRaft)
+
+
+```bash
+ls -l /var/lib/kafka-standalone/data/premier-topic-0/
+```
+
+Affichage :
+
+```text
+total 12
+-rw-r--r-- 1 user user 10485760 nov.  17 12:11 00000000000000000000.index
+-rw-r--r-- 1 user user      398 nov.  17 12:28 00000000000000000000.log
+-rw-r--r-- 1 user user 10485756 nov.  17 12:11 00000000000000000000.timeindex
+-rw-r--r-- 1 user user        8 nov.  17 12:11 leader-epoch-checkpoint
+-rw-r--r-- 1 user user       43 nov.  17 12:11 partition.metadata
+```
+
+Remarque : 
+
+- Une partition = un répertoire ; des **segments** (`.log` + index `.index` et `.timeindex`)
+  
+```bash
+kafka-dump-log.sh --print-data-log --files /var/lib/kafka-standalone/data/premier-topic-0/00000000000000000000.log | head -20
+```
+
+Affichage :
+```text
+Dumping /var/lib/kafka-standalone/data/premier-topic-0/00000000000000000000.log
+Log starting offset: 0
+baseOffset: 0 lastOffset: 0 count: 1 baseSequence: 0 lastSequence: 0 producerId: 1 producerEpoch: 0 partitionLeaderEpoch: 0 isTransactional: false isControl: false deleteHorizonMs: OptionalLong.empty position: 0 CreateTime: 1794914216875 size: 86 magic: 2 compresscodec: none crc: 1237382575 isvalid: true
+| offset: 0 CreateTime: 1794914216875 keySize: 8 valueSize: 10 sequence: 0 headerKeys: [] key: client-1 payload: commande A
+baseOffset: 1 lastOffset: 1 count: 1 baseSequence: 1 lastSequence: 1 producerId: 1 producerEpoch: 0 partitionLeaderEpoch: 0 isTransactional: false isControl: false deleteHorizonMs: OptionalLong.empty position: 86 CreateTime: 1794914229499 size: 86 magic: 2 compresscodec: none crc: 3868388610 isvalid: true
+| offset: 1 CreateTime: 1794914229499 keySize: 8 valueSize: 10 sequence: 1 headerKeys: [] key: client-1 payload: commande C
+baseOffset: 2 lastOffset: 2 count: 1 baseSequence: 2 lastSequence: 2 producerId: 1 producerEpoch: 0 partitionLeaderEpoch: 0 isTransactional: false isControl: false deleteHorizonMs: OptionalLong.empty position: 172 CreateTime: 1794914240848 size: 86 magic: 2 compresscodec: none crc: 4221179958 isvalid: true
+| offset: 2 CreateTime: 1794914240848 keySize: 8 valueSize: 10 sequence: 2 headerKeys: [] key: client-1 payload: commande E
+baseOffset: 3 lastOffset: 3 count: 1 baseSequence: 3 lastSequence: 3 producerId: 1 producerEpoch: 0 partitionLeaderEpoch: 0 isTransactional: false isControl: false deleteHorizonMs: OptionalLong.empty position: 258 CreateTime: 1794914903221 size: 70 magic: 2 compresscodec: none crc: 2401867369 isvalid: true
+| offset: 3 CreateTime: 1794914903221 keySize: 1 valueSize: 1 sequence: 3 headerKeys: [] key: f payload: 7
+baseOffset: 4 lastOffset: 4 count: 1 baseSequence: 4 lastSequence: 4 producerId: 1 producerEpoch: 0 partitionLeaderEpoch: 0 isTransactional: false isControl: false deleteHorizonMs: OptionalLong.empty position: 328 CreateTime: 1794914905841 size: 70 magic: 2 compresscodec: none crc: 3635036959 isvalid: true
+| offset: 4 CreateTime: 1794914905841 keySize: 1 valueSize: 1 sequence: 4 headerKeys: [] key: g payload: 8
+```
 
 ---
 
