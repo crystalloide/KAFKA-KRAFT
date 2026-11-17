@@ -413,6 +413,24 @@ Variable pratique pour la suite de ce TP :
 export BS=localhost:9192
 ```
 
+### Ajout de manière permanente :
+
+1. Ouvrez votre fichier de configuration Bash :
+   ```bash
+   vi ~/.bashrc
+   ```
+
+2. Ajoutez ou mettez à jour les lignes suivantes tout en bas du fichier :
+   ```bash
+export BS=localhost:9192
+   ```
+
+3. Appliquez les modifications à votre session en cours :
+   ```bash
+   source ~/.bashrc
+   ```
+
+
 ### D.1 Topics
 
 ```bash
