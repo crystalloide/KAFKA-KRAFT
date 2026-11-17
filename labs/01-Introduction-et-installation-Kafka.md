@@ -456,6 +456,19 @@ Topic: premier-topic	TopicId: ...	PartitionCount: 3	ReplicationFactor: 1	Configs
 	Topic: premier-topic	Partition: 2	Leader: 1	Replicas: 1	Isr: 1	Elr: 	LastKnownElr: 
 ```
 
+### Remarque n°1 : 
+> Chacune des 3 lignes représente une partition (0, 1 et 2) avec les informations suivantes :
+> 
+> Leader: 1 : Le broker (serveur) numéro 1 est le responsable de cette partition. C'est lui qui gère toutes les écritures et les lectures des producteurs et consommateurs pour cette partition.
+> 
+> Replicas: 1 : La liste des brokers qui possèdent une copie de cette partition (ici, uniquement le broker 1).
+> 
+> Isr (In-Sync Replicas) : 1 : La liste des replicas qui sont synchronisés avec le leader. Puisqu'il n'y a qu'un seul replica (le broker 1), il est lui-même dans l'ISR. Si ce broker tombe en panne, la partition n'a plus de réplica synchro.
+> 
+> Elr & LastKnownElr : (Epoch Leader Recovery / Dernier ELR connu) : Des champs plus récents liés à la gestion avancée des leaders et à la reprise sur incident dans les versions modernes de Kafka. Ici, ils sont vides car tout va bien et il n'y a pas eu de bascule complexe.
+
+### Remarque n°2 : 
+
 > `auto.create.topics.enable=false` : écrire dans un topic inexistant échoue. C'est le réglage
 > recommandé en production (pas de topic créé par une faute de frappe, avec de mauvais paramètres).
 
