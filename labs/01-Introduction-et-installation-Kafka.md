@@ -615,6 +615,8 @@ Puis, dans un autre terminal :
 
 ```bash
 kafka-consumer-groups.sh --bootstrap-server localhost:9192 --list
+```
+```bash
 kafka-consumer-groups.sh --bootstrap-server localhost:9192 --describe --group facturation
 ```
 
