@@ -587,7 +587,23 @@ kafka-console-consumer.sh --bootstrap-server localhost:9192 --topic premier-topi
   --formatter-property print.partition=true
 ```
 
-Terminal 2 : envoyez une dizaine de messages avec des clés différentes (`a:1`, `b:2`, `c:3`, ...).
+Terminal 2 : envoyez plusieurs de messages avec des clés différentes (`a:1`, `b:2`, `c:3`, ...) :
+
+```bash
+kafka-console-producer.sh --bootstrap-server localhost:9192 --topic premier-topic \
+  --reader-property parse.key=true --reader-property key.separator=:
+```
+
+```text
+a:1
+b:2
+c:3
+d:4
+e:5
+f:6
+g:7
+h:8
+```
 
 Observez : 
 - les deux consumers du même consummer group `facturation` **se répartissent** les partitions,
