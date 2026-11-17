@@ -616,9 +616,19 @@ Puis, dans un autre terminal :
 ```bash
 kafka-consumer-groups.sh --bootstrap-server localhost:9192 --list
 ```
+
+Affichhage :
+
+```text
+analytique
+facturation
+```
+
 ```bash
 kafka-consumer-groups.sh --bootstrap-server localhost:9192 --describe --group facturation
 ```
+
+Affichhage :
 
 ```text
 GROUP        TOPIC          PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG  CONSUMER-ID              HOST        CLIENT-ID
