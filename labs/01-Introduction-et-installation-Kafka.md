@@ -564,7 +564,12 @@ kafka-console-consumer.sh --bootstrap-server localhost:9192 --topic premier-topi
   --partition 1 --offset 1 --formatter-property print.offset=true --timeout-ms 5000
 ```
 
-> `--offset` exige `--partition` et ne se combine pas avec `--from-beginning` (utiliser `--offset earliest`).
+> `--offset` exige `--partition` et ne se combine pas avec `--from-beginning` (utiliser `--offset earliest`) :
+
+```bash
+kafka-console-consumer.sh --bootstrap-server localhost:9192 --topic premier-topic   --partition 1 --offset earliest --formatter-property print.offset=true --timeout-ms 5000
+```
+
 
 ### D.5 Consumer groups
 
