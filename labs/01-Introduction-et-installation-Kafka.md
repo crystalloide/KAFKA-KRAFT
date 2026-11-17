@@ -589,6 +589,8 @@ kafka-console-consumer.sh --bootstrap-server localhost:9192 --topic premier-topi
 
 Terminal 2 : envoyez plusieurs de messages avec des clés différentes (`a:1`, `b:2`, `c:3`, ...) :
 
+Déjà lancé normalement sur le Terminal 2, mais si besoin de relancer le producer : 
+
 ```bash
 kafka-console-producer.sh --bootstrap-server localhost:9192 --topic premier-topic \
   --reader-property parse.key=true --reader-property key.separator=:
