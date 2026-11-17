@@ -667,9 +667,9 @@ __consumer_offsets-14      __consumer_offsets-22  __consumer_offsets-30  __consu
 
 
 Remarque : 
-
-- `__consumer_offsets` : topic interne où sont stockés les offsets commités des groupes
 - `__cluster_metadata` : journal Raft des métadonnées (KRaft)
+- `__consumer_offsets` : topic interne où sont stockés les offsets commités des groupes
+- Par défaut, Kafka crée le topic interne `__consumer_offsets`avec un grand nombre de partitions (souvent 50 partitions) afin de pouvoir répartir efficacement la charge des écritures et des lectures de tous les groupes de consommateurs connectés au cluster, même si vous n'avez créé qu'un seul topic (premier-topic) de votre côté.
 
 
 ```bash
