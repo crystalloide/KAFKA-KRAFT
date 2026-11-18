@@ -1469,6 +1469,26 @@ kafka-topics.sh --bootstrap-server $BOOTSTRAP --describe --topics-with-overrides
 ```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --list | grep '^__'
 ```
+
+> Pourquoi les topics internes (comme __consumer_offsets) sont absents ?
+- Dans Kafka, les topics internes du système (comme __consumer_offsets ou __transaction_state) ne sont pas toujours présents par défaut :
+- Création dynamique : Le topic __consumer_offsets n'est créé automatiquement par le broker qu'au moment précis où un premier groupe de consommateurs (consumer group) se connecte et commet des offsets pour la première fois.
+- Si aucun consommateur ou flux n'a encore tourné et commité d'offsets sur ce cluster, ce topic n'existe tout simplement pas encore.
+
+Lançons donc un consummer brièvement pour forcer la création de **__consumer_offsets** :
+
+```bash
+kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic test-formation --group mon-groupe-test --max-messages 1 --timeout-ms 5000 
+```
+```bash
+kafka-topics.sh --bootstrap-server $BOOTSTRAP --list | grep '__'
+```
+
+Affichage attendu : 
+```text
+__consumer_offsets
+```
+
 ```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --delete --topic test-defauts
 ```
