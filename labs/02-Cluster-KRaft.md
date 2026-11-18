@@ -1246,12 +1246,19 @@ kafka-cluster.sh list-endpoints --bootstrap-server $BOOTSTRAP
 
 
 > Explication des colonnes :
+> 
 > ID : L'identifiant unique du nœud (broker) dans le cluster Kafka. Ici, vous avez trois brokers distincts : 11, 12 et 13.
+> 
 > HOST : L'adresse IP ou le nom d'hôte sur lequel le broker écoute les connexions. Ici, les trois tournent sur localhost.
+> 
 > PORT : Le port réseau utilisé par chaque broker (9092, 9094, 9096).
+> 
 > RACK : L'indication de la zone géographique ou de la salle de serveurs (rack-a, rack-b, rack-c). C'est utilisé par Kafka pour répartir intelligemment les répartitions de partitions (fault tolerance) et optimiser la réplication.
+> 
 > STATE : L'état du broker. L'état unfenced (non clôturé / actif) signifie que le broker a rejoint le cluster avec succès, qu'il est opérationnel, qu'il participe au quorum/aux données et qu'il est prêt à recevoir du trafic.
+> 
 > (À l'inverse, l'état fenced indiquerait un broker isolé ou en cours d'enregistrement/démarrage).
+> 
 > ENDPOINT_TYPE : Le rôle du service. Ici, il s'agit de broker (nœud gérant le stockage et le trafic des données pour les producteurs/consommateurs).
 
 
@@ -1283,7 +1290,6 @@ kafka-metadata-quorum.sh --bootstrap-server $BOOTSTRAP describe --replication
 Affichage attendu (extrait / Note : le contrôleur leader peut être 1, 2 ou 3) :
 
 ```text
-
 NodeId	DirectoryId           	LogEndOffset	Lag	LastFetchTimestamp	LastCaughtUpTimestamp	Status  	
 1     	AAAAAAAAAAAAAAAAAAAAAA	825         	0  	1794998086390     	1794998086390        	Leader  	
 2     	AAAAAAAAAAAAAAAAAAAAAA	825         	0  	1794998086315     	1794998086315        	Follower	
