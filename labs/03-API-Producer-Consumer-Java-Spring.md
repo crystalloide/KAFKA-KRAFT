@@ -1238,6 +1238,7 @@ EOF_KAFKA_KRAFT
 Terminal 2 : envoyez des messages, dont un message `crash` :
 
 ```bash
+source ~/KAFKA-KRAFT/scripts/kafka-env.sh
 kafka-console-producer.sh --bootstrap-server $BOOTSTRAP --topic test-formation
 ```
 
