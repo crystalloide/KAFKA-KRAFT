@@ -1214,9 +1214,17 @@ docker exec broker-1 cat /opt/kafka/config/server.properties | sort
 
 ```bash
 source ~/KAFKA-KRAFT/scripts/kafka-env.sh
+```
+```bash
 kafka-cluster.sh cluster-id --bootstrap-server $BOOTSTRAP
+```
+```bash
 kafka-cluster.sh list-endpoints --bootstrap-server $BOOTSTRAP
+```
+```bash
 kafka-metadata-quorum.sh --bootstrap-server $BOOTSTRAP describe --status
+```
+```bash
 kafka-metadata-quorum.sh --bootstrap-server $BOOTSTRAP describe --replication
 ```
 
@@ -1271,6 +1279,8 @@ Etat synthétique à tout moment :
 
 ```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --create --topic test-defauts
+```
+```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --describe --topic test-defauts
 ```
 
