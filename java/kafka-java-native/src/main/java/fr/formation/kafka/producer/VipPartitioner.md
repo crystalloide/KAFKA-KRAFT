@@ -77,6 +77,19 @@ Partitionneur personnalisé : il réserve la partition 0 aux clients VIP et rép
 - **L28** — Ferme le bloc ouvert ligne 26.
 - **L29** — Commentaire : la fonction de hachage est celle du partitionneur par défaut de Kafka.
 - **L30** — Autres clients : on calcule le hachage `murmur2` des octets de la clé, on le rend positif, on prend le reste de la division par (nombre de partitions − 1), ce qui donne une valeur de 0 à n−2, et on ajoute 1 pour obtenir une partition de 1 à n−1. Une même clé donne donc toujours la même partition.
+
+**Rappel** : **modulo** (noté **%**) est l'opération mathématique qui calcule le reste d'une division entière.
+
+La règle absolue du modulo est la suivante : lorsque l'on fait **% B**, le résultat est toujours un nombre entier compris entre **0 et B - 1**.
+
+Exemple pour un topic de 4 partitions au total :
+
+**partitions = 4**
+
+**partitions - 1** = 4 - 1 = **3**
+
+L'opération devient donc un **% 3**.
+
 - **L31** — Ferme le bloc ouvert ligne 21.
 
 ## Lignes 33 à 42 · Méthodes configure() et close()
