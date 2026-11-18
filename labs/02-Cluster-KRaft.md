@@ -1174,11 +1174,14 @@ docker compose up -d
 ```
 
 Suivez le démarrage (les brokers attendent que les 3 contrôleurs soient prêts, puis Kafka UI attend les
-3 brokers). Comptez 1 à 2 minutes ; Ctrl+C quand tout est `healthy` :
-
+3 brokers). 
+ 
 ```bash
 watch -n 5 'docker compose ps --format "table {{.Name}}\t{{.Status}}"'
 ```
+
+Comptez 1 à 2 minutes : Faire <Ctrl+C> quand tout est `healthy` pour sortir de la boucle d'attente/affichage
+
 
 ```text
 NAME           STATUS
