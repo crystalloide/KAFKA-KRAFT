@@ -1925,13 +1925,30 @@ mkdir -p java/spring-kafka-demo/src/main/java/fr/formation/kafka/spring/model
 cat > java/spring-kafka-demo/src/main/java/fr/formation/kafka/spring/model/Order.java <<'EOF_KAFKA_KRAFT'
 package fr.formation.kafka.spring.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.UUID;
 
-/**
- * Commande - même format JSON que les exemples Java natifs (OrderProducer).
- */
 public record Order(String orderId, String customerId, String product,
-                    int quantity, double unitPrice, String country, long ts) {
+                    int quantity, double unitPrice, String country, Long ts) {
+
+    @JsonCreator
+    public Order(
+            @JsonProperty("orderId") String orderId,
+            @JsonProperty("customerId") String customerId,
+            @JsonProperty("product") String product,
+            @JsonProperty("quantity") int quantity,
+            @JsonProperty("unitPrice") double unitPrice,
+            @JsonProperty("country") String country,
+            @JsonProperty("ts") Long ts) {
+        this.orderId = orderId;
+        this.customerId = customerId;
+        this.product = product;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+        this.country = country;
+        this.ts = ts;
+    }
 
     /** Complète une commande reçue par l'API REST (identifiant, horodatage, pays). */
     public Order withDefaults() {
@@ -1942,7 +1959,7 @@ public record Order(String orderId, String customerId, String product,
                 quantity,
                 unitPrice,
                 country == null || country.isBlank() ? "FR" : country,
-                ts == 0 ? System.currentTimeMillis() : ts);
+                ts == null || ts == 0 ? System.currentTimeMillis() : ts);
     }
 
     public double amount() {
@@ -2192,37 +2209,106 @@ package fr.formation.kafka.spring.consumer;
 
 import fr.formation.kafka.spring.model.Order;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.listener.ConsumerSeekAware;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.stereotype.Component;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Supervision du Dead Letter Topic : affiche les messages en échec et la cause
  * (en-têtes kafka_dlt-* ajoutés par DeadLetterPublishingRecoverer).
+ * Vue de supervision : à chaque démarrage, le DLT est relu depuis le début ; les 20 derniers
+ * messages sont conservés en mémoire et exposés par GET /api/orders/dlt (voir OrderController).
  */
 @Component
-public class DltListener {
+public class DltListener implements ConsumerSeekAware {
 
     private static final Logger log = LoggerFactory.getLogger(DltListener.class);
+    private static final int MAX_ENTRIES = 20;
+
+    /** Clé "partition-offset" du message dans le DLT : pas de doublon si le DLT est relu. */
+    private final Map<String, Map<String, Object>> recent = new LinkedHashMap<>() {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, Map<String, Object>> eldest) {
+            return size() > MAX_ENTRIES;
+        }
+    };
+
+    /** Relit tout le DLT à chaque affectation de partitions (démarrage de l'application). */
+    @Override
+    public void onPartitionsAssigned(Map<TopicPartition, Long> assignments, ConsumerSeekCallback callback) {
+        callback.seekToBeginning(assignments.keySet());
+    }
 
     @KafkaListener(id = "dlt-listener", topics = "orders-dlt", groupId = "order-dlt-monitor")
     public void onDeadLetter(ConsumerRecord<String, Order> record, Acknowledgment ack) {
-        log.warn("DLT : commande {} en échec - cause : {} (topic d'origine : {})",
-                record.value() == null ? "illisible" : record.value().orderId(),
-                header(record, KafkaHeaders.DLT_EXCEPTION_MESSAGE),
-                header(record, KafkaHeaders.DLT_ORIGINAL_TOPIC));
+        String orderId = record.value() == null ? "illisible" : record.value().orderId();
+        String cause = rootMessage(header(record, KafkaHeaders.DLT_EXCEPTION_MESSAGE));
+        String exception = simpleName(header(record, KafkaHeaders.DLT_EXCEPTION_CAUSE_FQCN));
+        String originalTopic = header(record, KafkaHeaders.DLT_ORIGINAL_TOPIC);
+        Integer originalPartition = intHeader(record, KafkaHeaders.DLT_ORIGINAL_PARTITION);
+        Long originalOffset = longHeader(record, KafkaHeaders.DLT_ORIGINAL_OFFSET);
+
+        log.warn("DLT : commande {} en échec - cause : {} ({}) - origine : {}-{} offset {}",
+                orderId, cause, exception, originalTopic, originalPartition, originalOffset);
+
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("orderId", orderId);
+        entry.put("cause", cause);
+        entry.put("exception", exception);
+        entry.put("originalTopic", originalTopic);
+        entry.put("originalPartition", originalPartition);
+        entry.put("originalOffset", originalOffset);
+        entry.put("dltPartition", record.partition());
+        entry.put("dltOffset", record.offset());
+        synchronized (recent) {
+            recent.put(record.partition() + "-" + record.offset(), entry);
+        }
         ack.acknowledge();
+    }
+
+    /** Derniers messages du DLT, du plus ancien au plus récent. */
+    public List<Map<String, Object>> recent() {
+        synchronized (recent) {
+            return new ArrayList<>(recent.values());
+        }
     }
 
     private static String header(ConsumerRecord<?, ?> record, String name) {
         Header header = record.headers().lastHeader(name);
         return header == null ? "-" : new String(header.value(), StandardCharsets.UTF_8);
+    }
+
+    private static Integer intHeader(ConsumerRecord<?, ?> record, String name) {
+        Header header = record.headers().lastHeader(name);
+        return header == null || header.value().length != Integer.BYTES ? null : ByteBuffer.wrap(header.value()).getInt();
+    }
+
+    private static Long longHeader(ConsumerRecord<?, ?> record, String name) {
+        Header header = record.headers().lastHeader(name);
+        return header == null || header.value().length != Long.BYTES ? null : ByteBuffer.wrap(header.value()).getLong();
+    }
+
+    /** "Listener method '...' threw exception; Quantité invalide ..." -> "Quantité invalide ..." */
+    private static String rootMessage(String message) {
+        int i = message.lastIndexOf("; ");
+        return i < 0 ? message : message.substring(i + 2);
+    }
+
+    private static String simpleName(String fqcn) {
+        return fqcn.substring(fqcn.lastIndexOf('.') + 1);
     }
 }
 EOF_KAFKA_KRAFT
@@ -2236,11 +2322,13 @@ mkdir -p java/spring-kafka-demo/src/main/java/fr/formation/kafka/spring/web
 cat > java/spring-kafka-demo/src/main/java/fr/formation/kafka/spring/web/OrderController.java <<'EOF_KAFKA_KRAFT'
 package fr.formation.kafka.spring.web;
 
+import fr.formation.kafka.spring.consumer.DltListener;
 import fr.formation.kafka.spring.model.Order;
 import fr.formation.kafka.spring.producer.OrderProducerService;
 import fr.formation.kafka.spring.producer.TransactionalOrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.support.SendResult;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -2258,8 +2346,10 @@ import java.util.concurrent.TimeUnit;
  * API REST :
  * <ul>
  *   <li>POST /api/orders                      : envoie la commande reçue en JSON</li>
+ *   <li>POST /api/orders?validate=true        : idem, mais refuse (HTTP 400) une quantité &lt;= 0</li>
  *   <li>POST /api/orders/random?count=20      : génère des commandes aléatoires</li>
  *   <li>POST /api/orders/transaction?fail=... : commande + audit dans une transaction</li>
+ *   <li>GET  /api/orders/dlt                  : derniers messages du Dead Letter Topic</li>
  * </ul>
  */
 @RestController
@@ -2272,14 +2362,32 @@ public class OrderController {
 
     private final OrderProducerService producer;
     private final TransactionalOrderService transactionalProducer;
+    private final DltListener dltListener;
 
-    public OrderController(OrderProducerService producer, TransactionalOrderService transactionalProducer) {
+    public OrderController(OrderProducerService producer, TransactionalOrderService transactionalProducer,
+                           DltListener dltListener) {
         this.producer = producer;
         this.transactionalProducer = transactionalProducer;
+        this.dltListener = dltListener;
     }
 
+    /**
+     * Publie la commande dans le topic "orders" et répond dès que Kafka l'a acceptée (acks=all).
+     * Le contrôle métier est fait PLUS TARD, de façon asynchrone, par le consumer OrderListener :
+     * une commande invalide est donc acceptée ici (HTTP 200) puis part dans le Dead Letter Topic.
+     * Avec ?validate=true, la quantité est contrôlée AVANT l'envoi : HTTP 400, rien n'est publié.
+     */
     @PostMapping
-    public ResponseEntity<Map<String, Object>> create(@RequestBody Order request) throws Exception {
+    public ResponseEntity<Map<String, Object>> create(@RequestBody Order request,
+                                                      @RequestParam(defaultValue = "false") boolean validate)
+            throws Exception {
+        if (validate && request.quantity() <= 0) {
+            Map<String, Object> error = new LinkedHashMap<>();
+            error.put("status", 400);
+            error.put("error", "Quantité invalide : " + request.quantity());
+            error.put("published", false);
+            return ResponseEntity.badRequest().body(error);
+        }
         Order order = request.withDefaults();
         SendResult<String, Order> result = producer.send(order).get(10, TimeUnit.SECONDS);
         Map<String, Object> body = new LinkedHashMap<>();
@@ -2297,7 +2405,7 @@ public class OrderController {
         for (int i = 0; i < count; i++) {
             int p = rnd.nextInt(PRODUCTS.length);
             Order order = new Order(null, "C-%03d".formatted(rnd.nextInt(1, 11)), PRODUCTS[p],
-                    rnd.nextInt(1, 6), PRICES[p], COUNTRIES[rnd.nextInt(COUNTRIES.length)], 0).withDefaults();
+                    rnd.nextInt(1, 6), PRICES[p], COUNTRIES[rnd.nextInt(COUNTRIES.length)], 0L).withDefaults();
             producer.send(order);
             ids.add(order.orderId());
         }
@@ -2314,6 +2422,12 @@ public class OrderController {
         } catch (RuntimeException e) {
             return Map.of("orderId", order.orderId(), "transaction", "ABORT", "cause", String.valueOf(e.getMessage()));
         }
+    }
+
+    /** Derniers messages arrivés dans "orders-dlt" (vus par DltListener), du plus ancien au plus récent. */
+    @GetMapping("/dlt")
+    public List<Map<String, Object>> deadLetters() {
+        return dltListener.recent();
     }
 }
 EOF_KAFKA_KRAFT
@@ -2409,7 +2523,7 @@ kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --describe --group order-
 {
   "orderId": "WEB-3f9c2a1b",
   "topic": "orders",
-  "partition": 2,
+  "partition": 0,
   "offset": 61
 }
 ```
@@ -2417,32 +2531,122 @@ kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --describe --group order-
 Logs de l'application :
 
 ```text
-Commande WEB-3f9c2a1b envoyée -> partition 2 offset 61
-Reçu WEB-3f9c2a1b (client C-001, 2 x Clavier) partition=2 offset=61
+Commande WEB-3f9c2a1b envoyée -> partition 0 offset 61
+Reçu WEB-3f9c2a1b (client C-001, 2 x Clavier) partition=0 offset=61
 ```
 
 ### C.4 Erreur de traitement : retries puis Dead Letter Topic
+
+> **Pourquoi `curl` ne renvoie-t-il pas d'erreur ?** L'API REST joue le rôle de **producer** : elle
+> répond dès que Kafka a **accepté** le message (`acks=all`), donc **avant** tout traitement. La
+> quantité n'est contrôlée que plus tard, dans un autre thread, par le **consumer** `OrderListener`.
+> Le client HTTP ne voit donc jamais cette erreur : c'est le **découplage** producteur / consommateur
+> (le consommateur pourrait tourner dans un autre service, ou être arrêté). L'erreur se constate
+> **côté consommateur** : logs de l'application, topic `orders-dlt`, et ici l'URL `GET /api/orders/dlt`.
+
+**1. Envoyer une commande invalide (quantité 0)**
 
 ```bash
 curl -s -X POST localhost:8085/api/orders -H 'Content-Type: application/json' \
   -d '{"customerId":"C-009","product":"Souris","quantity":0,"unitPrice":19.9}' | jq
 ```
 
-Logs : 3 tentatives (1 + 2 retries espacées d'1 s), puis publication dans `orders-dlt` :
-
-```text
-Reçu WEB-... (client C-009, 0 x Souris) partition=1 offset=...
-Reçu WEB-... (client C-009, 0 x Souris) partition=1 offset=...
-Reçu WEB-... (client C-009, 0 x Souris) partition=1 offset=...
-DLT : commande WEB-... en échec - cause : Listener method ... threw exception (... Quantité invalide ...) (topic d'origine : orders)
+```json
+{
+  "orderId": "WEB-7c1d9e42",
+  "topic": "orders",
+  "partition": 5,
+  "offset": 12
+}
 ```
 
-Les en-têtes ajoutés par Spring sont visibles en console :
+Réponse HTTP 200 : la commande est **publiée** (le client `C-009` est toujours sur la partition 5 ;
+l'identifiant et l'offset varient).
+
+**2. Logs de l'application** (terminal où tourne `mvn spring-boot:run`) : 3 tentatives (1 + 2 retries
+espacées d'1 s) **sur le même offset**, puis publication dans `orders-dlt` :
+
+```text
+Commande WEB-7c1d9e42 envoyée -> partition 5 offset 12
+Reçu WEB-7c1d9e42 (client C-009, 0 x Souris) partition=5 offset=12
+Record in retry and not yet recovered
+Reçu WEB-7c1d9e42 (client C-009, 0 x Souris) partition=5 offset=12
+Record in retry and not yet recovered
+Reçu WEB-7c1d9e42 (client C-009, 0 x Souris) partition=5 offset=12
+DLT : commande WEB-7c1d9e42 en échec - cause : Quantité invalide pour la commande WEB-7c1d9e42 (IllegalArgumentException) - origine : orders-5 offset 12
+```
+
+> Entre deux tentatives, le `DefaultErrorHandler` repositionne le consommateur (*seek*) sur le message
+> en échec : la partition 5 est **bloquée** pendant les retries (les autres partitions continuent).
+> Après la dernière tentative, le `DeadLetterPublishingRecoverer` publie le message dans `orders-dlt`
+> (même partition, en-têtes `kafka_dlt-*`) et l'offset est validé : la partition 5 repart.
+
+**3. Voir l'erreur en ligne de commande**
+
+Via l'application (les 20 derniers messages du DLT, conservés par `DltListener`) :
+
+```bash
+sleep 3
+curl -s localhost:8085/api/orders/dlt | jq '.[-1]'
+curl -s localhost:8085/api/orders/dlt | jq -r '.[] | "\(.orderId)\t\(.cause)"'
+```
+
+```json
+{
+  "orderId": "WEB-7c1d9e42",
+  "cause": "Quantité invalide pour la commande WEB-7c1d9e42",
+  "exception": "IllegalArgumentException",
+  "originalTopic": "orders",
+  "originalPartition": 5,
+  "originalOffset": 12,
+  "dltPartition": 5,
+  "dltOffset": 0
+}
+```
+
+```text
+ORD-0017	Quantité invalide pour la commande ORD-0017
+ORD-0042	Quantité invalide pour la commande ORD-0042
+WEB-7c1d9e42	Quantité invalide pour la commande WEB-7c1d9e42
+```
+
+`ORD-0017` et `ORD-0042` sont les commandes invalides de `data/orders.csv` envoyées en partie B (voir
+C.2). `DltListener` relit tout le DLT à chaque démarrage de l'application : les messages de vos essais
+précédents apparaissent donc aussi.
+
+Directement dans Kafka (vue brute : la cause est dans l'en-tête `kafka_dlt-exception-message`) :
 
 ```bash
 kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic orders-dlt --from-beginning --timeout-ms 5000 \
-  --formatter-property print.headers=true | tr ',' '\n' | grep kafka_dlt | head
+  --formatter-property print.headers=true 2>/dev/null | grep -o 'threw exception; [^,]*'
 ```
+
+```text
+threw exception; Quantité invalide pour la commande ORD-0017
+threw exception; Quantité invalide pour la commande ORD-0042
+threw exception; Quantité invalide pour la commande WEB-7c1d9e42
+```
+
+(L'ordre peut varier : les messages sont lus sur les 6 partitions du DLT.)
+
+**4. Variante : refuser la commande dès l'API (validation synchrone)**
+
+```bash
+curl -s -X POST "localhost:8085/api/orders?validate=true" -H 'Content-Type: application/json' \
+  -d '{"customerId":"C-009","product":"Souris","quantity":0,"unitPrice":19.9}' -w '\nHTTP %{http_code}\n'
+```
+
+```text
+{"status":400,"error":"Quantité invalide : 0","published":false}
+HTTP 400
+```
+
+Cette fois, le client reçoit l'erreur immédiatement et **rien n'est publié** (aucun log `Reçu`, rien
+de nouveau dans `GET /api/orders/dlt`).
+
+> **À retenir :** valider à l'entrée (HTTP 400) protège **ce** producteur ; le DLT protège le
+> **consommateur** contre **tous** les producteurs du topic (producer Java natif de la partie B,
+> Kafka Connect, autres services…). En production, on fait les deux.
 
 ### C.5 Transactions avec Spring
 
@@ -2469,7 +2673,9 @@ La commande annulée n'est visible ni dans `orders-audit` (`0`) ni par le listen
 curl -s localhost:8085/actuator/prometheus | grep -E '^kafka_consumer_fetch_manager_records_lag_max|^kafka_producer_record_send_total' | head
 ```
 
-Ces métriques seront collectées par Prometheus au TP05. Arrêtez l'application (Ctrl+C) quand vous voulez.
+Ces métriques seront collectées par Prometheus au TP05. 
+
+Arrêtez l'application (Ctrl+C) quand vous voulez.
 
 ---
 
@@ -2488,5 +2694,5 @@ Ces métriques seront collectées par Prometheus au TP05. Arrêtez l'application
 2. Que se passe-t-il si le traitement d'un lot dépasse `max.poll.interval.ms` ?
 3. Pourquoi un consumer en `read_uncommitted` voit-il les messages d'une transaction annulée ?
 4. Quelle est la différence entre un consumer group et un share group ?
-
+   
 ✅ **Suite : TP04 – Administrer un cluster.**
