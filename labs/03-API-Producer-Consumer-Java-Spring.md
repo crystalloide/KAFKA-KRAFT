@@ -1722,15 +1722,26 @@ kafka-console-share-consumer.sh --bootstrap-server $BOOTSTRAP --topic test-forma
   --formatter-property print.partition=true --formatter-property print.delivery=true
 ```
 
-Puis envoyez 10 messages : ils sont répartis entre les 2 consumers **bien que le topic n'ait que 3
-partitions et qu'ils lisent les mêmes**. 
+Puis envoyez 10 messages : ils sont répartis entre les 2 consumers **bien qu'ils lisent les 3 mêmes partitions du topic**
 
-```bash
+``bash
 kafka-console-producer.sh --bootstrap-server $BOOTSTRAP --topic test-formation
 ```
 
-Pour décrire le groupe : `kafka-share-groups.sh --bootstrap-server $BOOTSTRAP --describe --group file-attente`.
+**Pour décrire le groupe :** 
 
+```bash
+kafka-share-groups.sh --bootstrap-server $BOOTSTRAP --describe --group file-attente
+```
+
+Affichage en retour : 
+
+```text
+GROUP           TOPIC           PARTITION  START-OFFSET  LAG
+file-attente    test-formation  0          -             -
+file-attente    test-formation  1          -             -
+file-attente    test-formation  2          87            0
+```
 ---
 
 ## Partie C – Spring Boot 4.1 et Spring for Apache Kafka 4.1 (`java/spring-kafka-demo`)
