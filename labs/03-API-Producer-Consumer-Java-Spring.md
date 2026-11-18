@@ -1,8 +1,11 @@
 ## TP03 – Configurer et utiliser les API Producer et Consumer (Java 21 natif et Spring Boot)
 
 > **Chapitre 3 du programme** – Objectif pédagogique n°3
+
 > Durée : 3 h
+
 > Pré-requis : cluster du TP02 démarré, topics créés par `scripts/create-topics.sh`
+
 > **kafka-clients 4.4.0**, **Java 21**, Spring Boot **4.1** / Spring for Apache Kafka **4.1**
 
 ---
