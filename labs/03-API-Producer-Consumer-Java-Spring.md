@@ -45,22 +45,7 @@ callback(metadata, exception) ◄───────────────�
 | `max.request.size` | 1 Mo | à aligner avec `max.message.bytes` du topic |
 
 
-# Architecture et cycle de vie d'un message dans un Producer Kafka
-
-Votre schéma résumé du cycle de vie d'un message (*record*) côté **Producer Kafka**, depuis son appel initial jusqu'à la confirmation de son écriture.
-
-## Schéma du flux
-
-```text
-send(record) ─► Serializer ───► Partitioner ───────► RecordAccumulator (lots par partition) ───► Sender ───────────► broker leader
-                (clé/valeur     (hash(clé) % N       batch.size, linger.ms,                      (acks, retries,            │
-                 -> octets)      ou sticky)          compression.type, buffer.memory)            in-flight)                 ▼
-                                                                                                                            │  
-                                                                                                                  réplication vers l'ISR
-callback(metadata, exception) ◄──────────────────────── acquittement ◄──────────────────────────────────────────────────────┘
-```
-
----
+## Explication du schéma résumé du cycle de vie d'un message (*record*) côté **Producer Kafka**, depuis son appel initial jusqu'à la confirmation de son écriture.
 
 ## Explication détaillée étape par étape
 
