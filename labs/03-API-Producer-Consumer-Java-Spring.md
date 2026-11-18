@@ -1248,9 +1248,43 @@ kafka-console-producer.sh --bootstrap-server $BOOTSTRAP --topic test-formation
 >crash
 ```
 
-Le consumer s'arrête brutalement **avant** de commiter `crash`. Relancez-le : `crash` est **relu**
-(et le programme s'arrête de nouveau : c'est un « poison pill »). Repositionnez le groupe après ce
-message pour en sortir :
+Le consumer s'arrête brutalement **avant** de commiter `crash`. 
+
+Relancez-le : `crash` est **relu** (et le programme s'arrête de nouveau : c'est le fameux « **poison pill** »). 
+
+### Précision importante : 
+
+Le consumer relancé ne crashe pas immédiatement ! 
+
+Il semble bloqué pendant un long moment avant de traiter à nouveau le message "crash"
+
+Ceci provient d'un mécanisme inhérent à Kafka : la gestion de la rééquilibration (rebalance) suite à un arrêt brutal (Runtime.getRuntime().halt(1)).
+
+**Voici l'explication détaillée de ce qui se passe sous le capot :**
+
+1. La cause racine : Le délai de détection de panne (session.timeout.ms / max.poll.interval.ms)
+
+Lorsque vous utilisez Runtime.getRuntime().halt(1), le processus s'arrête instantanément sans envoyer de signal de déconnexion propre (LeaveGroup) au cluster Kafka.
+
+Pour le broker Kafka, le consumer est donc toujours considéré comme actif et propriétaire de la partition **test-formation-0**.
+
+Quand vous relancez immédiatement votre programme dans le Terminal 1 :
+
+Le nouveau consumer se connecte et rejoint le groupe de consommateurs (formation-manual-commit).
+
+Il demande à s'attribuer la partition, mais le coordinateur de groupe (Broker Kafka) sait que cette partition est actuellement détenue par l'ancienne instance (qui a craché).
+
+Le coordinateur déclenche alors une rééquilibration (rebalance).
+
+Le problème survient ici : 
+- Le coordinateur attend que l'ancienne instance (morte) réponde au heartbeat ou déclare forfait. 
+- Puisque l'ancienne instance est morte brutalement, Kafka doit attendre l'expiration du délai de heartbeat (session.timeout.ms, par défaut 45 secondes) ou le délai de la session avant de considérer officiellement que l'ancien consumer est mort et de réattribuer la partition au nouveau.
+
+**Résultat :** Votre nouveau consumer reste bloqué/suspendu dans sa méthode consumer.subscribe(...) ou lors des premiers poll() pendant toute la durée de ce timeout (souvent 10 à 45 secondes, voire plus selon les configurations par défaut), ce qui donne l'impression que le programme "ne crashe pas" ou est figé/lent avant de relire le message.
+
+
+
+### Repositionnez le groupe après ce message pour en sortir :
 
 ```bash
 source ~/KAFKA-KRAFT/scripts/kafka-env.sh
