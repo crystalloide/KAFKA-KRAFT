@@ -1238,6 +1238,7 @@ Affichage :
 Cluster ID: PIYzDzl8TomQ84Cnrxi0gA
 ```
 
+Poursuivons : 
 
 ```bash
 kafka-cluster.sh list-endpoints --bootstrap-server $BOOTSTRAP
@@ -1259,36 +1260,37 @@ kafka-cluster.sh list-endpoints --bootstrap-server $BOOTSTRAP
 ```bash
 kafka-metadata-quorum.sh --bootstrap-server $BOOTSTRAP describe --status
 ```
+
+Affichage en retour : 
+
+```text
+ClusterId:              PIYzDzl8TomQ84Cnrxi0gA
+LeaderId:               1
+LeaderEpoch:            1
+HighWatermark:          679
+MaxFollowerLag:         0
+MaxFollowerLagTimeMs:   0
+CurrentVoters:          [{"id": 1, "endpoints": ["CONTROLLER://controller-1:9093"]}, {"id": 2, "endpoints": ["CONTROLLER://controller-2:9093"]}, {"id": 3, "endpoints": ["CONTROLLER://controller-3:9093"]}]
+CurrentObservers:       [{"id": 11, "directoryId": "m8pnunWp93ZHl5GZrF7PPA"}, {"id": 13, "directoryId": "mwz9mInHTyXmyo79TPH25A"}, {"id": 12, "directoryId": "dJ7YWtq0Ia-jpns9bK34sg"}]
+```
+
+Poursuivons : 
+
 ```bash
 kafka-metadata-quorum.sh --bootstrap-server $BOOTSTRAP describe --replication
 ```
 
-Affichage attendu (extraits ; le contrôleur leader peut être 1, 2 ou 3) :
+Affichage attendu (extrait / Note : le contrôleur leader peut être 1, 2 ou 3) :
 
 ```text
-Cluster ID: PIYzDzl8TomQ84Cnrxi0gA
 
-ID         HOST      PORT       RACK       ENDPOINT_TYPE
-11         localhost 9092       rack-a     broker
-12         localhost 9094       rack-b     broker
-13         localhost 9096       rack-c     broker
-
-ClusterId:              PIYzDzl8TomQ84Cnrxi0gA
-LeaderId:               2
-LeaderEpoch:            1
-HighWatermark:          ...
-MaxFollowerLag:         0
-MaxFollowerLagTimeMs:   0
-CurrentVoters:          [{"id": 1, "endpoints": ["CONTROLLER://controller-1:9093"]}, {"id": 2, ...}, {"id": 3, ...}]
-CurrentObservers:       [{"id": 11, ...}, {"id": 12, ...}, {"id": 13, ...}]
-
-NodeId  DirectoryId             LogEndOffset  Lag  LastFetchTimestamp  LastCaughtUpTimestamp  Status
-2       ...                     1234          0    ...                 ...                    Leader
-1       ...                     1234          0    ...                 ...                    Follower
-3       ...                     1234          0    ...                 ...                    Follower
-11      ...                     1234          0    ...                 ...                    Observer
-12      ...                     1234          0    ...                 ...                    Observer
-13      ...                     1234          0    ...                 ...                    Observer
+NodeId	DirectoryId           	LogEndOffset	Lag	LastFetchTimestamp	LastCaughtUpTimestamp	Status  	
+1     	AAAAAAAAAAAAAAAAAAAAAA	825         	0  	1794998086390     	1794998086390        	Leader  	
+2     	AAAAAAAAAAAAAAAAAAAAAA	825         	0  	1794998086315     	1794998086315        	Follower	
+3     	AAAAAAAAAAAAAAAAAAAAAA	825         	0  	1794998086315     	1794998086315        	Follower	
+11    	m8pnunWp93ZHl5GZrF7PPA	825         	0  	1794998086315     	1794998086315        	Observer	
+13    	mwz9mInHTyXmyo79TPH25A	825         	0  	1794998086315     	1794998086315        	Observer	
+12    	dJ7YWtq0Ia-jpns9bK34sg	825         	0  	1794998086315     	1794998086315        	Observer
 ```
 
 - Les **voters** (contrôleurs) votent pour élire le leader du quorum
@@ -1304,6 +1306,39 @@ Etat synthétique à tout moment :
 
 ```bash
 ~/KAFKA-KRAFT/scripts/cluster-status.sh
+```
+
+Affichage attendu :
+
+```text
+=== Conteneurs ===
+NAME           STATUS                   PORTS
+broker-1       Up 7 minutes (healthy)   0.0.0.0:9092->9092/tcp, [::]:9092->9092/tcp
+broker-2       Up 7 minutes (healthy)   9092/tcp, 0.0.0.0:9094->9094/tcp, [::]:9094->9094/tcp
+broker-3       Up 7 minutes (healthy)   9092/tcp, 0.0.0.0:9096->9096/tcp, [::]:9096->9096/tcp
+controller-1   Up 7 minutes (healthy)   9092/tcp
+controller-2   Up 7 minutes (healthy)   9092/tcp
+controller-3   Up 7 minutes (healthy)   9092/tcp
+kafka-ui       Up 7 minutes             0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+
+=== Quorum KRaft ===
+ClusterId:              PIYzDzl8TomQ84Cnrxi0gA
+LeaderId:               1
+LeaderEpoch:            1
+HighWatermark:          949
+MaxFollowerLag:         1
+MaxFollowerLagTimeMs:   618
+CurrentVoters:          [{"id": 1, "endpoints": ["CONTROLLER://controller-1:9093"]}, {"id": 2, "endpoints": ["CONTROLLER://controller-2:9093"]}, {"id": 3, "endpoints": ["CONTROLLER://controller-3:9093"]}]
+
+=== Brokers enregistrés ===
+ID         HOST      PORT       RACK   STATE      ENDPOINT_TYPE  
+11         localhost 9092       rack-a unfenced   broker         
+12         localhost 9094       rack-b unfenced   broker         
+13         localhost 9096       rack-c unfenced   broker         
+
+=== Partitions sous-répliquées (vide = OK) ===
+=== Partitions sous min.insync.replicas (vide = OK) ===
+=== Partitions sans leader (vide = OK) ===
 ```
 
 ---
