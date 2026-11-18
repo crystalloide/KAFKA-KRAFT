@@ -1,4 +1,4 @@
-# TP03 – Configurer et utiliser les API Producer et Consumer (Java 21 natif et Spring Boot)
+## TP03 – Configurer et utiliser les API Producer et Consumer (Java 21 natif et Spring Boot)
 
 > **Chapitre 3 du programme** – Objectif pédagogique n°3
 > Durée : 3 h
