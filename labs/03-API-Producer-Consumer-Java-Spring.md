@@ -1050,18 +1050,27 @@ groupe-commandes simple-consumer-c3b9...     /172.x.x.x  simple-consumer  2
 
 Expériences :
 
-1. Produisez à nouveau les commandes (`./run.sh producer.OrderProducer orders 200`) : chaque instance
-   ne reçoit que les messages de **ses** partitions.
+1. Produisez à nouveau les commandes : chaque instance ne reçoit que les messages de **ses** partitions :
+```bash
+./run.sh producer.OrderProducer orders 100
+ ```
+
 2. Arrêtez une instance (Ctrl+C) : **rééquilibrage**, ses partitions sont reprises par les autres.
+   
 3. Lancez 7 instances : la 7e reste **inactive** (6 partitions = 6 consommateurs actifs au maximum).
 
 ### B.7 Lag et repositionnement des offsets (ex-TP06)
 
-Arrêtez **tous** les consumers du groupe, produisez des messages, puis :
+- Arrêtez **tous** les consumers du groupe 
 
+- Produisez des messages :
+  
 ```bash
 cd ~/KAFKA-KRAFT/java/kafka-java-native && ./run.sh producer.OrderProducer orders
 ```
+
+- Puis observez : 
+
 ```bash
 source ~/KAFKA-KRAFT/scripts/kafka-env.sh
 kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --describe --group groupe-commandes
