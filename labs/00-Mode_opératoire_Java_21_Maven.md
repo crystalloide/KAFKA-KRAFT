@@ -9,7 +9,7 @@ Ce guide résume les étapes nécessaires pour installer Java 21, configurer le 
 
 ```bash
 sudo apt-get update && sudo apt-get -y upgrade
-sudo apt-get install -y curl wget git jq unzip zip tree netcat-openbsd ca-certificates gnupg kcat
+sudo apt-get install -y curl wget git jq unzip zip tree netcat-openbsd ca-certificates gnupg kafkacat
 ```
 
 ### 1.2 Installer Java 21 (LTS) et Maven
