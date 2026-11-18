@@ -1150,6 +1150,8 @@ Validation de la syntaxe du fichier Compose :
 
 ```bash
 docker compose config --quiet && echo "docker-compose.yml valide"
+```
+```bash
 docker compose config --services
 ```
 
@@ -1175,8 +1177,7 @@ docker compose pull
 docker compose up -d
 ```
 
-Suivez le démarrage (les brokers attendent que les 3 contrôleurs soient prêts, puis Kafka UI attend les
-3 brokers). 
+Suivez le démarrage (les brokers attendent que les 3 contrôleurs soient prêts, puis Kafka UI attend les 3 brokers). 
  
 ```bash
 watch -n 5 'docker compose ps --format "table {{.Name}}\t{{.Status}}"'
