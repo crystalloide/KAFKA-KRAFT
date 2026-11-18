@@ -1458,9 +1458,17 @@ source ~/KAFKA-KRAFT/scripts/kafka-env.sh
 kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic transactions-in --isolation-level read_committed
 ```
 
+On ne voit rien (piège !)
+
+On relance depuis le début : 
+
 ```bash
+source ~/KAFKA-KRAFT/scripts/kafka-env.sh
 kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic transactions-in --isolation-level read_committed --from-beginning
 ```
+
+Et on ne voit que ce qui a été committé :
+
 
 ```bash
 cd ~/KAFKA-KRAFT/java/kafka-java-native
@@ -1592,7 +1600,10 @@ Les messages de la transaction annulée ne sont **jamais** traités (lecture en 
 Transactions en cours / producteurs transactionnels :
 
 ```bash
+source ~/KAFKA-KRAFT/scripts/kafka-env.sh
 kafka-transactions.sh --bootstrap-server $BOOTSTRAP list
+```
+```bash
 kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --describe --group eos-processor
 ```
 
