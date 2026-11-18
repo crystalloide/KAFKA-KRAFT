@@ -1001,6 +1001,26 @@ public class SimpleConsumer {
 EOF_KAFKA_KRAFT
 ```
 
+#### Rappel sur le tropic **orders** : il contient 6 partitions : 
+
+```bash
+source ~/KAFKA-KRAFT/scripts/kafka-env.sh
+kafka-topics.sh --bootstrap-server $BOOTSTRAP --describe --topic orders
+```
+
+Affichage en retour : 
+
+```text
+Topic: orders	TopicId: wAANvbwETTOH_G0XXHeVVA	PartitionCount: 6	ReplicationFactor: 3	Configs: min.insync.replicas=2,segment.bytes=1073741824,unclean.leader.election.enable=false
+	Topic: orders	Partition: 0	Leader: 13	Replicas: 13,11,12	Isr: 11,12,13	Elr: 	LastKnownElr: 
+	Topic: orders	Partition: 1	Leader: 11	Replicas: 11,12,13	Isr: 11,12,13	Elr: 	LastKnownElr: 
+	Topic: orders	Partition: 2	Leader: 12	Replicas: 12,13,11	Isr: 11,12,13	Elr: 	LastKnownElr: 
+	Topic: orders	Partition: 3	Leader: 12	Replicas: 12,13,11	Isr: 11,12,13	Elr: 	LastKnownElr: 
+	Topic: orders	Partition: 4	Leader: 13	Replicas: 13,11,12	Isr: 11,12,13	Elr: 	LastKnownElr: 
+	Topic: orders	Partition: 5	Leader: 11	Replicas: 11,12,13	Isr: 11,12,13	Elr: 	LastKnownElr: 
+
+```
+
 Lancez **3 instances** du même groupe, dans 3 terminaux :
 
 ```bash
