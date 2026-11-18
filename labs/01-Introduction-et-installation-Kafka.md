@@ -1,9 +1,9 @@
-# TP01 – Introduction à Kafka et installation du produit (mode KRaft)
+## TP01 – Introduction à Kafka et installation du produit (mode KRaft)
 
 > **Chapitre 1 du programme** – Objectifs pédagogiques n°1 et n°2
+
 > Durée : 1 h 30 (dont 30 min d'apports théoriques)
 > Pré-requis : TP00 réalisé (WSL2, Java 21, Docker, projet `~/KAFKA-KRAFT`)
-> Reprend et met à jour : TP01, TP03, TP04, TP05, TP06 (Ubuntu / Kafka 4.1.1)
 
 ---
 
