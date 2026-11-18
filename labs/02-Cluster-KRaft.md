@@ -1,9 +1,8 @@
-# TP02 – Installer et configurer un cluster Kafka KRaft
+## TP02 – Installer et configurer un cluster Kafka KRaft
 
 > **Chapitre 2 du programme** – Objectif pédagogique n°2
 > Durée : 2 h
 > Pré-requis : TP00 et TP01 (outils CLI Kafka 4.4.0 dans `/opt/kafka/bin`)
-> Reprend et met à jour : TP02, TP03, TP03a, TP03b, TP29*, TP32 (ZooKeeper et images obsolètes retirés)
 
 ---
 
