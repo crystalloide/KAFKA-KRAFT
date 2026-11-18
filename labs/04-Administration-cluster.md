@@ -359,8 +359,12 @@ Sur nos listeners PLAINTEXT, tous les clients ont le principal `ANONYMOUS` : seu
 
 ```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --create --if-not-exists --topic quota-demo --partitions 1 --replication-factor 3
+```
+```bash
 kafka-configs.sh --bootstrap-server $BOOTSTRAP --alter --entity-type clients --entity-name perf-quota \
   --add-config 'producer_byte_rate=102400,consumer_byte_rate=204800'
+```
+```bash
 kafka-configs.sh --bootstrap-server $BOOTSTRAP --describe --entity-type clients --entity-name perf-quota
 ```
 
@@ -380,6 +384,8 @@ affiche en fin de test les métriques du producer, dont le temps de *throttling*
 ```bash
 kafka-producer-perf-test.sh --bootstrap-server $BOOTSTRAP --topic quota-demo --num-records 3000 --record-size 1000 \
   --throughput -1 --command-property client.id=perf-quota acks=all --print-metrics | grep -E 'records sent|produce-throttle-time-max'
+```
+```bash
 kafka-producer-perf-test.sh --bootstrap-server $BOOTSTRAP --topic quota-demo --num-records 3000 --record-size 1000 \
   --throughput -1 --command-property client.id=perf-libre acks=all --print-metrics | grep -E 'records sent|produce-throttle-time-max'
 ```
@@ -426,6 +432,8 @@ Nettoyage :
 ```bash
 kafka-configs.sh --bootstrap-server $BOOTSTRAP --alter --entity-type clients --entity-name perf-quota \
   --delete-config producer_byte_rate,consumer_byte_rate
+```
+```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --delete --topic quota-demo
 ```
 
