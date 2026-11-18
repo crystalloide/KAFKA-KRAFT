@@ -1,4 +1,4 @@
-# Mode Opératoire : Configurer Java 21 et Maven dans WSL2 ou une VM Ubuntu :
+## Mode Opératoire : Configurer Java 21 et Maven dans WSL2 ou une VM Ubuntu :
 
 Ce guide résume les étapes nécessaires pour installer Java 21, configurer le système d'alternatives et faire fonctionner Maven correctement sous WSL2 (Ubuntu).
 
