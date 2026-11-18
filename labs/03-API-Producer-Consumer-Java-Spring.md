@@ -1469,6 +1469,14 @@ kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic transactions-in 
 
 Et on ne voit que ce qui a été committé :
 
+```text
+COMMIT-1795025870501 ligne 1
+COMMIT-1795025870501 ligne 2
+COMMIT-1795025870501 ligne 3
+```
+
+**<CTRL-C> pour sortir**
+
 
 ```bash
 cd ~/KAFKA-KRAFT/java/kafka-java-native
