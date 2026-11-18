@@ -121,14 +121,17 @@ docker exec -e KAFKA_OPTS= controller-1 /opt/kafka/bin/kafka-dump-log.sh --clust
 
 | Paramètre (topic) | Défaut | Rôle |
 |---|---|---|
-| `retention.ms` | 7 jours (`log.retention.hours=168`) | âge maximal d'un segment **fermé** |
+| `retention.ms` | 7 jours (`log.retention.hours=168`) | un segment est supprimé quand son message **le plus récent** a dépassé cet âge |
 | `retention.bytes` | -1 (illimité) | taille maximale **par partition** |
 | `segment.bytes` / `segment.ms` | 1 Gio / 7 jours | fermeture (« roll ») du segment actif |
 | `cleanup.policy` | `delete` | `delete`, `compact` ou `compact,delete` |
 | `max.message.bytes` | ~1 Mo | taille max d'un lot de messages |
 | `min.insync.replicas` | valeur du broker | durabilité en `acks=all` |
 
-> La suppression se fait **par segment entier** : le segment actif n'est jamais supprimé ni compacté.
+> La suppression se fait **par segment entier**, lors d'une vérification périodique
+> (`log.retention.check.interval.ms`, 5 min ici). Pour la rétention par durée, le segment **actif** est
+> supprimé lui aussi quand tous ses messages ont expiré : Kafka crée d'abord un nouveau segment vide.
+> Les offsets ne repartent **jamais** à 0. (La compaction, elle, ne touche jamais le segment actif.)
 
 ```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --create --topic retention-demo --partitions 1 --replication-factor 3 \
@@ -139,22 +142,65 @@ kafka-get-offsets.sh --bootstrap-server $BOOTSTRAP --topic retention-demo --time
 ```
 
 ```text
+Created topic retention-demo.
 retention-demo:0:0
 retention-demo:0:5
 ```
 
-Patientez ~2 minutes, envoyez un nouveau message (il ferme l'ancien segment), puis attendez la vérification
-de rétention (`log.retention.check.interval.ms`, 5 min) :
+Après plus de 10 s (`segment.ms`), un nouveau message **ferme** le segment courant et en ouvre un
+nouveau (le « roll » a lieu à l'écriture) :
 
 ```bash
-echo "message tardif" | kafka-console-producer.sh --bootstrap-server $BOOTSTRAP --topic retention-demo
-sleep 300
-kafka-get-offsets.sh --bootstrap-server $BOOTSTRAP --topic retention-demo --time earliest   # au besoin, relancez 1 min plus tard
+sleep 15
+echo "message tardif - $(date +%T)" | kafka-console-producer.sh --bootstrap-server $BOOTSTRAP --topic retention-demo
+docker exec broker-1 ls /var/lib/kafka/data/retention-demo-0 | grep '\.log'
 ```
 
 ```text
-retention-demo:0:5          <- les 5 premiers messages ont été supprimés
+00000000000000000000.log
+00000000000000000005.log
 ```
+
+Deux segments : `...000.log` (fermé, offsets 0 à 4) et `...005.log` (actif, offset 5). Le nom d'un
+segment est l'offset de son premier message.
+
+Attendez maintenant la prochaine vérification de rétention (au plus ~6 min). La boucle s'arrête dès
+que le début de la partition a avancé (vous pouvez passer à la suite dans un autre terminal) :
+
+```bash
+until kafka-get-offsets.sh --bootstrap-server $BOOTSTRAP --topic retention-demo --time earliest | grep -q ':6$'; do sleep 20; done
+date +%T
+kafka-get-offsets.sh --bootstrap-server $BOOTSTRAP --topic retention-demo --time earliest
+kafka-get-offsets.sh --bootstrap-server $BOOTSTRAP --topic retention-demo --time latest
+docker exec broker-1 ls /var/lib/kafka/data/retention-demo-0 | grep '\.log'
+```
+
+```text
+20:51:37
+retention-demo:0:6
+retention-demo:0:6
+00000000000000000000.log.deleted
+00000000000000000005.log.deleted
+00000000000000000006.log
+```
+
+Lecture du résultat :
+
+- `earliest = latest = 6` : la partition est **vide**, les 6 messages ont été supprimés. Lors de la
+  vérification, **tous** avaient plus de 60 s, y compris le « message tardif » : le segment actif a donc
+  été supprimé lui aussi, après création d'un nouveau segment vide `...006.log` ;
+- le prochain message recevra l'offset **6** : les offsets ne sont jamais réutilisés ;
+- les fichiers `*.deleted` disparaissent après `file.delete.delay.ms` (60 s par défaut) ;
+- en production, avec `retention.ms` = 7 jours, les messages récents sont toujours dans un segment
+  non expiré : seuls les segments les plus anciens disparaissent, un par un.
+
+> **Pour voir une suppression partielle** (segments anciens supprimés, segment récent conservé), il
+> faut qu'un message récent existe au moment de la vérification. Laissez tourner quelques minutes :
+> `while true; do echo "flux $(date +%T)"; sleep 20; done | kafka-console-producer.sh --bootstrap-server $BOOTSTRAP --topic retention-demo`
+> (arrêt par `Ctrl+C`) : à chaque vérification, `earliest` avance mais ne rejoint jamais `latest`.
+
+> **Rejouer la démonstration :** supprimez d'abord le topic, puis attendez quelques secondes avant de le
+> recréer : `kafka-topics.sh --bootstrap-server $BOOTSTRAP --delete --if-exists --topic retention-demo && sleep 5`.
 
 ### B.2 Purger un topic
 
