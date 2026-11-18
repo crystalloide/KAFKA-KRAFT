@@ -345,9 +345,13 @@ Les quotas protègent le cluster contre un client qui monopoliserait les ressour
 | `request_percentage` | % d'un thread | temps passé par les threads réseau et I/O du broker pour ce client |
 | `controller_mutation_rate` | partitions/s | créations / suppressions de partitions (protège le contrôleur) |
 
-Entités : `users` (principal **authentifié** : SASL, mTLS), `clients` (`client.id`, **déclaratif**),
-combinaison des deux, ou valeurs par défaut (`--entity-default`). Sur nos listeners PLAINTEXT, tous les
-clients ont le principal `ANONYMOUS` : seuls les quotas par `client.id` sont utilisables ici.
+**Entités :**
+- `users` (principal **authentifié** : SASL, mTLS),
+- `clients` (`client.id`, **déclaratif**),
+- combinaison des deux,
+- ou valeurs par défaut (`--entity-default`).
+
+Sur nos listeners PLAINTEXT, tous les clients ont le principal `ANONYMOUS` : seuls les quotas par `client.id` sont utilisables ici.
 
 > ⚠️ Les quotas de débit sont appliqués **par broker** : un client limité à 100 Kio/s peut écrire
 > 100 Kio/s sur **chaque** broker leader des partitions qu'il utilise. D'où un topic à **une seule
