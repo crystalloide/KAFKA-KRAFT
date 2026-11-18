@@ -20,10 +20,16 @@ Pour garantir qu'aucun message n'est dupliqué et que l'ordre est strictement pr
 Le paramètre `max.poll.interval.ms` (par défaut 5 minutes) définit le délai maximum autorisé entre deux appels consécutifs à la méthode `poll()` par un consommateur. Il permet de détecter un consommateur "vivant" au niveau réseau (qui continue d'envoyer des *heartbeats*), mais bloqué dans son traitement applicatif (*livelock*).
 
 Si le traitement d'un lot dépasse cette durée :
-1. **Exclusion du groupe :** Le consommateur estime qu'il a dépassé le temps imparti et envoie volontairement une requête `LeaveGroup` au *Group Coordinator* (ou le coordinateur le considère comme mort/inactif).
-2. **Déclenchement d'un Rebalance :** Le *Group Coordinator* déclenche un rééquilibrage (*rebalance*) du *Consumer Group* (selon le protocole KIP-848 en Kafka 4.x, les partitions sont réassignées de manière incrémentale aux autres membres actifs).
-3. **Échec du commit d'offsets :** Lorsque le consommateur lent termine enfin son traitement et tente de valider ses offsets (`commitSync()` ou `commitAsync()`), le broker rejette la requête avec une exception **`CommitFailedException`** (ou `IllegalGenerationException` / `UnknownMemberIdException`).
-4. **Risque de doublons :** Comme les offsets n'ont pas pu être validés, le nouveau consommateur ayant récupéré les partitions relira et retraitera les mêmes messages (sémantique *At-Least-Once*).
+
+1. **Exclusion du groupe :** Le consommateur estime qu'il a dépassé le temps imparti et envoie volontairement une requête de départ (`ConsumerGroupHeartbeat` avec `memberEpoch = -1` sous le protocole KIP-848) au *Group Coordinator*, ou ce dernier l'exclut d'office à expiration du délai.
+
+2. **Rééquilibrage piloté par le serveur (Protocole KIP-848) :** Contrairement à l'ancien protocole qui imposait une barrière de synchronisation globale (*Stop-the-World* avec `JoinGroup`/`SyncGroup` où tous les consommateurs devaient s'arrêter et renvoyer leurs métadonnées), le **KIP-848** (protocole par défaut dans Kafka 4.x) délègue entièrement le calcul d'assignation au *Group Coordinator* côté broker :
+   * Le coordinateur incrémente l'**époque du groupe** (*Group Epoch*) et calcule la nouvelle cible d'assignation (*Target Assignment*) en répartissant uniquement les partitions orphelines du membre exclu vers les autres membres actifs.
+   * Les consommateurs sains **n'interrompent jamais** le traitement de leurs partitions existantes. Ils reçoivent simplement les nouvelles partitions à ajouter lors de leur prochain appel périodique à `ConsumerGroupHeartbeat` (rééquilibrage **incrémental et asynchrone**).
+
+3. **Échec du commit d'offsets :** Lorsque le consommateur lent termine enfin son traitement et tente de valider ses offsets (`commitSync()` ou `commitAsync()`), le broker rejette la requête avec une exception **`CommitFailedException`** (ou `FencedMemberEpochException` sous KIP-848), car son époque de membre (*Member Epoch*) est devenue obsolète.
+
+4. **Risque de doublons :** Comme les offsets n'ont pas pu être validés, les consommateurs ayant récupéré les partitions reliront et retraiteront les mêmes messages (sémantique *At-Least-Once*).
 
 ---
 
