@@ -1151,12 +1151,20 @@ Validation de la syntaxe du fichier Compose :
 ```bash
 docker compose config --quiet && echo "docker-compose.yml valide"
 ```
+
+Affichage en retour : 
+```text
+docker-compose.yml valide
+```
+
+Poursuivons : 
+
 ```bash
 docker compose config --services
 ```
 
+Affichage en retour : 
 ```text
-docker-compose.yml valide
 controller-1
 controller-2
 controller-3
