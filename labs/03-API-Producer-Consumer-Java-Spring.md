@@ -1705,17 +1705,21 @@ Configurations surchargées :
 
 ### B.12 Nouveautés Kafka 4.x côté consumer (bonus)
 
-**Nouveau protocole de rééquilibrage (KIP-848)** : le coordinateur côté broker calcule l'affectation,
-les rééquilibrages sont incrémentaux (plus de « stop-the-world ») :
+**Nouveau protocole de rééquilibrage (KIP-848)** : 
+- le coordinateur côté broker calcule l'affectation, les rééquilibrages sont incrémentaux (plus de « stop-the-world ») :
 
 ```bash
 kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic orders --group groupe-kip848 \
   --command-property group.protocol=consumer --timeout-ms 10000 > /dev/null
+```
+```bash
 kafka-groups.sh --bootstrap-server $BOOTSTRAP --list
 ```
 
-**Share groups – « Queues for Kafka » (KIP-932, GA en 4.2)** : plusieurs consommateurs lisent **la même
-partition**, chaque message est acquitté individuellement (sémantique de file). Lancez 2 consumers :
+**Share groups – « Queues for Kafka » (KIP-932, GA en 4.2)** : 
+- Plusieurs consommateurs lisent **la même partition**, chaque message est acquitté individuellement (sémantique de file).
+
+- Lancez 2 consumers :
 
 ```bash
 kafka-console-share-consumer.sh --bootstrap-server $BOOTSTRAP --topic test-formation --group file-attente \
@@ -1724,7 +1728,7 @@ kafka-console-share-consumer.sh --bootstrap-server $BOOTSTRAP --topic test-forma
 
 Puis envoyez 10 messages : ils sont répartis entre les 2 consumers **bien qu'ils lisent les 3 mêmes partitions du topic**
 
-``bash
+```bash
 kafka-console-producer.sh --bootstrap-server $BOOTSTRAP --topic test-formation
 ```
 
