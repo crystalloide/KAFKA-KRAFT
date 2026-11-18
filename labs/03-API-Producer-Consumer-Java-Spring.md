@@ -914,8 +914,12 @@ docker compose start broker-2 broker-3    # ... puis aboutissent dès le retour 
 
 > Grâce à l'idempotence, les messages réessayés ne sont **ni dupliqués ni désordonnés**. Ils ne sont en
 > échec (`[KO] ... TimeoutException`) que si la panne dure plus que `delivery.timeout.ms` (2 min).
-> Relancez ensuite avec `acks=1` (`./run.sh producer.ReliableProducer test-formation 1`) : l'écriture
-> continue même avec 2 brokers arrêtés... au prix d'un risque de **perte** de messages.
+
+> Relancez ensuite avec `acks=1` :
+```bash
+./run.sh producer.ReliableProducer test-formation 1
+```
+> l'écriture continue même avec 2 brokers arrêtés... au prix d'un risque de **perte** de messages.
 
 Arrêtez le producer (Ctrl+C) : il affiche le bilan des envois acquittés et en échec.
 
