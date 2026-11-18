@@ -1,9 +1,11 @@
-# TP04 – Administrer un cluster Kafka
+## TP04 – Administrer un cluster Kafka
 
 > **Chapitre 4 du programme** – Objectif pédagogique n°4 (mise en oeuvre et administration, sans déploiement de cluster)
+
 > Durée : 1 h 45
+
 > Pré-requis : cluster du TP02 démarré, outils CLI (TP01), `source ~/KAFKA-KRAFT/scripts/kafka-env.sh`
-> Reprend et met à jour : TP07a (cheat-sheet), TP25 (AKHQ), TP32 (réaffectation), TP34 (grands messages), TP38 (quotas)
+
 
 ---
 
