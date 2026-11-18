@@ -103,8 +103,10 @@ callback(metadata, exception) ◄───────────────�
 | `isolation.level` | `read_uncommitted` | `read_committed` pour ignorer les transactions annulées |
 | `group.protocol` | `classic` | `consumer` = nouveau protocole de rééquilibrage (KIP-848, GA en 4.0) |
 
-**Sémantiques de livraison :** *at most once* (commit avant traitement), *at least once* (commit après
-traitement : doublons possibles), *exactly once* (transactions : lecture + écriture + commit atomiques).
+**Sémantiques de livraison :** 
+- *at most once* (commit avant traitement)
+- *at least once* (commit après traitement : doublons possibles)
+- *exactly once* (transactions : lecture + écriture + commit atomiques).
 
 ---
 
