@@ -3,8 +3,7 @@
 > **Chapitre 3 du programme** – Objectif pédagogique n°3
 > Durée : 3 h
 > Pré-requis : cluster du TP02 démarré, topics créés par `scripts/create-topics.sh`
-> Reprend et met à jour : TP13, TP14, TP15, TP27 (Kafka 3.9 → **kafka-clients 4.4.0**, Java 17 → **Java 21**),
-> TP06 (consumer groups) ; ajout de Spring Boot **4.1** / Spring for Apache Kafka **4.1**
+> **kafka-clients 4.4.0**, **Java 21**, Spring Boot **4.1** / Spring for Apache Kafka **4.1**
 
 ---
 
