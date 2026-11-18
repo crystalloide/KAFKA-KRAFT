@@ -3,6 +3,7 @@
 > **Chapitre 1 du programme** – Objectifs pédagogiques n°1 et n°2
 
 > Durée : 1 h 30 (dont 30 min d'apports théoriques)
+
 > Pré-requis : TP00 réalisé (WSL2, Java 21, Docker, projet `~/KAFKA-KRAFT`)
 
 ---
