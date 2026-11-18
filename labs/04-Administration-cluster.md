@@ -529,8 +529,9 @@ EOF_KAFKA_KRAFT
 chmod +x scripts/rolling-restart.sh
 ```
 
-Laissez un producteur tourner pendant l'opération (aucune erreur attendue) puis lancez le redémarrage
-des brokers :
+Laissez un producteur tourner pendant l'opération, puis redémarrez les brokers. Les trois lignes se
+collent d'un bloc : `&` lance le producteur **en arrière-plan** (job n° 1, 20 messages/s), le script
+redémarre les brokers un par un (2 à 4 min), puis `kill %1` arrête le producteur.
 
 ```bash
 kafka-producer-perf-test.sh --bootstrap-server $BOOTSTRAP --topic orders-audit --num-records 100000 --record-size 200 \
@@ -539,17 +540,54 @@ kafka-producer-perf-test.sh --bootstrap-server $BOOTSTRAP --topic orders-audit -
 kill %1
 ```
 
+#### Affichage (extrait ; les lignes du producteur et celles du script s'entremêlent, valeurs indicatives) :
+
 ```text
-=== 10:42:01 broker-1 : restart ===
+=== 22:01:05 broker-1 : restart ===
+[2026-11-18 22:01:09,412] WARN [Producer clientId=perf-producer-client] Connection to node 11 (localhost/127.0.0.1:9092) could not be established. Node may not be available. (org.apache.kafka.clients.NetworkClient)
+200 records sent, 20.0 records/sec (0.00 MB/sec), 35.2 ms avg latency, 1874.0 ms max latency.
     broker-1 healthy, attente de la resynchronisation des réplicas...
     0 partition sous-répliquée : noeud suivant
-=== 10:43:10 broker-2 : restart ===
+=== 22:01:52 broker-2 : restart ===
 ...
 === Rolling restart terminé ===
+[1]+  Terminated              kafka-producer-perf-test.sh --bootstrap-server $BOOTSTRAP ...
 ```
 
-> L'arrêt d'un broker (`SIGTERM`) déclenche un **arrêt contrôlé** : il transfère ses partitions leader
-> avant de s'arrêter. D'où `stop_grace_period: 60s` dans Compose (Docker tue sinon le processus au bout de 10 s).
+#### Ce qu'il faut observer :
+
+- le débit reste à **20 messages/s** du début à la fin : le service n'est jamais interrompu ;
+- seule la **latence max** augmente, au moment des bascules de leader ;
+- les lignes `WARN` (connexion impossible au broker arrêté, `NOT_LEADER_OR_FOLLOWER ... retrying`)
+  sont **normales** : le producer met à jour ses métadonnées et renvoie automatiquement
+  (`retries` illimité, `delivery.timeout.ms` = 2 min) ;
+- un message réellement perdu s'afficherait sous forme de *stack trace* (`org.apache.kafka.common.errors...`) :
+  il ne doit y en avoir **aucune** ;
+- `kill %1` arrête le producteur sans bilan final : c'est normal.
+
+Pourquoi aucun message n'est perdu : avec RF=3 et `min.insync.replicas=2`, un broker arrêté laisse
+2 répliques synchronisées par partition, ce qui suffit à `acks=all`. Le script n'arrête le broker
+suivant qu'une fois revenu à **0 partition sous-répliquée** : deux répliques d'une même partition ne
+sont jamais absentes en même temps. L'arrêt (`SIGTERM`) déclenche un *controlled shutdown* : le
+broker transfère ses leaders aux autres avant de s'arrêter.
+
+Après l'opération, les leaders sont en général déséquilibrés (un broker qui revient n'est leader
+d'aucune partition). Le contrôleur rétablit seul les leaders préférés en moins de 5 min
+(`auto.leader.rebalance.enable=true`, vérification toutes les 300 s), ou immédiatement :
+
+```bash
+kafka-topics.sh --bootstrap-server $BOOTSTRAP --describe --topic orders-audit | grep -o 'Partition: [0-9]*.*Leader: [0-9]*'
+```
+```bash
+kafka-leader-election.sh --bootstrap-server $BOOTSTRAP --election-type preferred --all-topic-partitions
+```
+```bash
+kafka-topics.sh --bootstrap-server $BOOTSTRAP --describe --topic orders-audit | grep -o 'Partition: [0-9]*.*Leader: [0-9]*'
+```
+
+> L'arrêt d'un broker (`SIGTERM`) déclenche un **arrêt contrôlé** : il transfère ses partitions leader avant de s'arrêter.
+
+> D'où `stop_grace_period: 60s` dans Compose (Docker tue sinon le processus au bout de 10 s).
 
 ### D.2 Montée de version (procédure)
 
