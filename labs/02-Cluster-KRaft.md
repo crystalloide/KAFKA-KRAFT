@@ -1170,6 +1170,8 @@ kafka-ui
 
 ```bash
 docker compose pull
+```
+```bash
 docker compose up -d
 ```
 
@@ -1198,6 +1200,8 @@ Les logs :
 
 ```bash
 docker compose logs controller-1 | grep -iE "formatting|elected|leader" | head
+```
+```bash
 docker compose logs broker-1 | grep -E "Kafka Server started|Transitioning from RECOVERY to RUNNING"
 ```
 
