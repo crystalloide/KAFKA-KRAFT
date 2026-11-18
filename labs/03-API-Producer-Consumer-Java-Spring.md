@@ -1605,7 +1605,8 @@ lu [COMMIT-1762700000000 ligne 1] -> écrit [COMMIT-1762700000000 LIGNE 1]
 ```
 
 Les messages de la transaction annulée ne sont **jamais** traités (lecture en `read_committed`).
-Transactions en cours / producteurs transactionnels :
+
+**Transactions en cours / producteurs transactionnels :**
 
 ```bash
 source ~/KAFKA-KRAFT/scripts/kafka-env.sh
