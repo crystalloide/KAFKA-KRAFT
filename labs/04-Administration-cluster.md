@@ -336,49 +336,112 @@ kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic large-message --
 
 ## Partie C – Quotas :
 
-Les quotas protègent le cluster contre un client qui monopoliserait les ressources. Entités :
-`users` (principal authentifié), `clients` (`client.id`), combinaison des deux, ou valeurs par défaut.
+Les quotas protègent le cluster contre un client qui monopoliserait les ressources (*noisy neighbour*).
+
+| Type de quota | Unité | Ce qui est limité |
+|---|---|---|
+| `producer_byte_rate` | octets/s | débit d'écriture d'un client |
+| `consumer_byte_rate` | octets/s | débit de lecture d'un client |
+| `request_percentage` | % d'un thread | temps passé par les threads réseau et I/O du broker pour ce client |
+| `controller_mutation_rate` | partitions/s | créations / suppressions de partitions (protège le contrôleur) |
+
+Entités : `users` (principal **authentifié** : SASL, mTLS), `clients` (`client.id`, **déclaratif**),
+combinaison des deux, ou valeurs par défaut (`--entity-default`). Sur nos listeners PLAINTEXT, tous les
+clients ont le principal `ANONYMOUS` : seuls les quotas par `client.id` sont utilisables ici.
+
+> ⚠️ Les quotas de débit sont appliqués **par broker** : un client limité à 100 Kio/s peut écrire
+> 100 Kio/s sur **chaque** broker leader des partitions qu'il utilise. D'où un topic à **une seule
+> partition** pour la démonstration : tout le trafic passe par un seul broker.
 
 ```bash
+kafka-topics.sh --bootstrap-server $BOOTSTRAP --create --if-not-exists --topic quota-demo --partitions 1 --replication-factor 3
 kafka-configs.sh --bootstrap-server $BOOTSTRAP --alter --entity-type clients --entity-name perf-quota \
   --add-config 'producer_byte_rate=102400,consumer_byte_rate=204800'
 kafka-configs.sh --bootstrap-server $BOOTSTRAP --describe --entity-type clients --entity-name perf-quota
 ```
 
 ```text
+Created topic quota-demo.
 Completed updating config for client perf-quota.
 Quota configs for client-id 'perf-quota' are consumer_byte_rate=204800.0, producer_byte_rate=102400.0
 ```
 
-Comparaison d'un client limité et d'un client libre (3 Mo envoyés) :
+Le quota est enregistré dans les métadonnées KRaft et appliqué **immédiatement** par tous les brokers,
+sans redémarrage.
+
+Comparaison d'un client limité et d'un client libre (3 000 messages de 1 000 octets, soit ~3 Mo).
+`kafka-producer-perf-test.sh` affiche le débit **toutes les 5 s**, puis la moyenne ; `--print-metrics`
+affiche en fin de test les métriques du producer, dont le temps de *throttling* :
+
+```bash
+kafka-producer-perf-test.sh --bootstrap-server $BOOTSTRAP --topic quota-demo --num-records 3000 --record-size 1000 \
+  --throughput -1 --command-property client.id=perf-quota acks=all --print-metrics | grep -E 'records sent|produce-throttle-time-max'
+kafka-producer-perf-test.sh --bootstrap-server $BOOTSTRAP --topic quota-demo --num-records 3000 --record-size 1000 \
+  --throughput -1 --command-property client.id=perf-libre acks=all --print-metrics | grep -E 'records sent|produce-throttle-time-max'
+```
+
+Résultat (valeurs indicatives) :
+
+```text
+1412 records sent, 282.2 records/sec (0.27 MB/sec), ...    <- démarrage : « crédit » initial de ~1 Mo
+505 records sent, 100.9 records/sec (0.10 MB/sec), ...     <- régime établi : ~100 Kio/s
+500 records sent, 99.9 records/sec (0.10 MB/sec), ...
+500 records sent, 100.0 records/sec (0.10 MB/sec), ...
+3000 records sent, 142.6 records/sec (0.14 MB/sec), ...    <- moyenne sur ~21 s
+producer-metrics:produce-throttle-time-max:{client-id=perf-quota}   : 412.000
+
+3000 records sent, 2985.1 records/sec (2.85 MB/sec), ...   <- client "perf-libre" (dépend du poste)
+producer-metrics:produce-throttle-time-max:{client-id=perf-libre}   : 0.000
+```
+
+Comment lire ce résultat :
+
+- **régime établi** : les lignes intermédiaires du client `perf-quota` sont à ~0,10 Mo/s, soit le quota
+  de 102 400 octets/s ;
+- **crédit initial** : le broker mesure le débit sur une fenêtre glissante de ~10 s
+  (`quota.window.num=11` × `quota.window.size.seconds=1`) et considère, au démarrage, que 10 s se sont
+  déjà écoulées. Un nouveau client peut donc envoyer ~10 s de quota (≈ 1 Mo) d'un coup : la moyenne
+  finale (0,14 Mo/s) est supérieure au quota. Plus le test est long, plus elle s'en rapproche ;
+- **throttling** : le broker ne rejette pas les requêtes et ne perd aucun message. Il calcule un temps
+  d'attente, le renvoie au client (`throttle_time_ms`) et suspend la connexion pendant ce délai :
+  `produce-throttle-time-max` > 0 côté client, MBean `kafka.server:type=Produce,client-id=perf-quota`
+  (attributs `byte-rate`, `throttle-time`) côté broker. Le quota `consumer_byte_rate` fonctionne de la
+  même façon sur les lectures (`fetch-throttle-time-*`, MBean `type=Fetch`).
+
+**Le quota est appliqué par broker** : relancez le test du client `perf-quota` sur `test-formation`
+(3 partitions, leaders sur les 3 brokers). Le débit est nettement plus élevé : chaque broker accorde
+100 Kio/s, et le crédit initial de chacun (~1 Mo) couvre presque à lui seul le tiers des 3 Mo qu'il reçoit.
 
 ```bash
 kafka-producer-perf-test.sh --bootstrap-server $BOOTSTRAP --topic test-formation --num-records 3000 --record-size 1000 \
-  --throughput -1 --command-property client.id=perf-quota acks=all
-kafka-producer-perf-test.sh --bootstrap-server $BOOTSTRAP --topic test-formation --num-records 3000 --record-size 1000 \
-  --throughput -1 --command-property client.id=perf-libre acks=all
+  --throughput -1 --command-property client.id=perf-quota acks=all | tail -1
 ```
 
-```text
-3000 records sent, 99.8 records/sec (0.10 MB/sec), ...      <- client "perf-quota" : bridé à ~100 Ko/s
-3000 records sent, 2985.1 records/sec (2.85 MB/sec), ...    <- client "perf-libre"
-```
-
-Le broker ne rejette pas les requêtes : il **retarde** les réponses (*throttling*, métrique
-`throttle-time` côté client et `kafka.server:type=Produce,client-id=...` côté broker).
+Nettoyage :
 
 ```bash
 kafka-configs.sh --bootstrap-server $BOOTSTRAP --alter --entity-type clients --entity-name perf-quota \
   --delete-config producer_byte_rate,consumer_byte_rate
+kafka-topics.sh --bootstrap-server $BOOTSTRAP --delete --topic quota-demo
 ```
 
-> **Ordre de priorité (du plus spécifique au plus général) :** 
+> **Ordre de priorité (du plus spécifique au plus général).** Pour un client, le broker applique la
+> **première** entrée qui existe dans cette liste (les quotas ne se cumulent pas) :
 >
-> `/users/<u>/clients/<c>` > `/users/<u>/clients/<défaut>`
-> 
-> `/users/<u>` > `/users/<défaut>/clients/<c>` > `/users/<défaut>/clients/<défaut>` > `/users/<défaut>`
-> 
-> `/clients/<c>` > `/clients/<défaut>`. Autre type : `request_percentage` (temps CPU des threads réseau/IO).
+> 1. `/users/<u>/clients/<c>`
+> 2. `/users/<u>/clients/<défaut>`
+> 3. `/users/<u>`
+> 4. `/users/<défaut>/clients/<c>`
+> 5. `/users/<défaut>/clients/<défaut>`
+> 6. `/users/<défaut>`
+> 7. `/clients/<c>`
+> 8. `/clients/<défaut>`
+>
+> En production : un quota **par défaut** comme filet de sécurité
+> (`kafka-configs.sh --alter --entity-type clients --entity-default --add-config producer_byte_rate=...`),
+> des quotas par **utilisateur authentifié** (un `client.id` peut être choisi librement par n'importe
+> quel client), et une alerte sur le temps de *throttling*. Le trafic de réplication entre brokers n'est
+> pas concerné : il a ses propres limites (`leader/follower.replication.throttled.rate`, cf. TP02).
 
 ---
 
