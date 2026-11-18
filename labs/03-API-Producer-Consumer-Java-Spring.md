@@ -1370,6 +1370,8 @@ public class SeekConsumer {
 EOF_KAFKA_KRAFT
 ```
 
+On lance : 
+
 ```bash
 ./run.sh consumer.SeekConsumer test-formation 30
 ```
@@ -1442,7 +1444,7 @@ public class TransactionalProducer {
 EOF_KAFKA_KRAFT
 ```
 
-Deux consumers console, l'un en `read_uncommitted` (défaut), l'autre en `read_committed` :
+Deux consumers lancés via 2 consoles : l'un en `read_uncommitted` (défaut), l'autre en `read_committed` :
 
 ```bash
 source ~/KAFKA-KRAFT/scripts/kafka-env.sh
@@ -1450,6 +1452,7 @@ kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic transactions-in 
 ```
 
 ```bash
+source ~/KAFKA-KRAFT/scripts/kafka-env.sh
 kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic transactions-in --isolation-level read_uncommitted --from-beginning
 ```
 
@@ -1593,9 +1596,13 @@ public class ExactlyOnceProcessor {
 EOF_KAFKA_KRAFT
 ```
 
+On lance : 
+
 ```bash
 ./run.sh transactions.ExactlyOnceProcessor
 ```
+
+Affichage en retour : 
 
 ```text
 transactions-in --(majuscules)--> transactions-out  (Ctrl+C pour arrêter)
