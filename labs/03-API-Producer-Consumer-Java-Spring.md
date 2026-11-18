@@ -1082,7 +1082,9 @@ GROUP            TOPIC   PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG   ...
 groupe-commandes orders  0          21              31              10    ...
 ```
 
-Le **LAG** augmente. Repositionnement (le groupe doit être **inactif**) :
+Le **LAG** augmente ! 
+
+### Repositionnement (le groupe doit être **inactif**) :
 
 ```bash
 kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --group groupe-commandes --topic orders --reset-offsets --to-earliest --dry-run
