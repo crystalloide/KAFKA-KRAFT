@@ -1505,7 +1505,7 @@ __consumer_offsets
 ```
 
 ___
->** A retenir :**
+> **A retenir :**
 >
 > **`__consumer_offsets`** (50 partitions) est créé au premier usage d'un consumer group ;
 >
