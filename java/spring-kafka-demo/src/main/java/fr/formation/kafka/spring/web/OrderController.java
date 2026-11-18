@@ -1,10 +1,12 @@
 package fr.formation.kafka.spring.web;
 
+import fr.formation.kafka.spring.consumer.DltListener;
 import fr.formation.kafka.spring.model.Order;
 import fr.formation.kafka.spring.producer.OrderProducerService;
 import fr.formation.kafka.spring.producer.TransactionalOrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.support.SendResult;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,8 +24,10 @@ import java.util.concurrent.TimeUnit;
  * API REST :
  * <ul>
  *   <li>POST /api/orders                      : envoie la commande reçue en JSON</li>
+ *   <li>POST /api/orders?validate=true        : idem, mais refuse (HTTP 400) une quantité &lt;= 0</li>
  *   <li>POST /api/orders/random?count=20      : génère des commandes aléatoires</li>
  *   <li>POST /api/orders/transaction?fail=... : commande + audit dans une transaction</li>
+ *   <li>GET  /api/orders/dlt                  : derniers messages du Dead Letter Topic</li>
  * </ul>
  */
 @RestController
@@ -36,14 +40,32 @@ public class OrderController {
 
     private final OrderProducerService producer;
     private final TransactionalOrderService transactionalProducer;
+    private final DltListener dltListener;
 
-    public OrderController(OrderProducerService producer, TransactionalOrderService transactionalProducer) {
+    public OrderController(OrderProducerService producer, TransactionalOrderService transactionalProducer,
+                           DltListener dltListener) {
         this.producer = producer;
         this.transactionalProducer = transactionalProducer;
+        this.dltListener = dltListener;
     }
 
+    /**
+     * Publie la commande dans le topic "orders" et répond dès que Kafka l'a acceptée (acks=all).
+     * Le contrôle métier est fait PLUS TARD, de façon asynchrone, par le consumer OrderListener :
+     * une commande invalide est donc acceptée ici (HTTP 200) puis part dans le Dead Letter Topic.
+     * Avec ?validate=true, la quantité est contrôlée AVANT l'envoi : HTTP 400, rien n'est publié.
+     */
     @PostMapping
-    public ResponseEntity<Map<String, Object>> create(@RequestBody Order request) throws Exception {
+    public ResponseEntity<Map<String, Object>> create(@RequestBody Order request,
+                                                      @RequestParam(defaultValue = "false") boolean validate)
+            throws Exception {
+        if (validate && request.quantity() <= 0) {
+            Map<String, Object> error = new LinkedHashMap<>();
+            error.put("status", 400);
+            error.put("error", "Quantité invalide : " + request.quantity());
+            error.put("published", false);
+            return ResponseEntity.badRequest().body(error);
+        }
         Order order = request.withDefaults();
         SendResult<String, Order> result = producer.send(order).get(10, TimeUnit.SECONDS);
         Map<String, Object> body = new LinkedHashMap<>();
@@ -78,5 +100,11 @@ public class OrderController {
         } catch (RuntimeException e) {
             return Map.of("orderId", order.orderId(), "transaction", "ABORT", "cause", String.valueOf(e.getMessage()));
         }
+    }
+
+    /** Derniers messages arrivés dans "orders-dlt" (vus par DltListener), du plus ancien au plus récent. */
+    @GetMapping("/dlt")
+    public List<Map<String, Object>> deadLetters() {
+        return dltListener.recent();
     }
 }
