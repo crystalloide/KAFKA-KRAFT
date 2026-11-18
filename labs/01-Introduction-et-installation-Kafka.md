@@ -247,8 +247,7 @@ sudo chown -R "$USER":"$USER" /var/lib/kafka-standalone /var/log/kafka-standalon
 
 ### C.2 Générer l'identifiant du cluster et formater le stockage
 
-En mode KRaft, **avant le premier démarrage**, chaque noeud doit formater son répertoire avec le
-**même `cluster.id`** :
+En mode KRaft, **avant le premier démarrage**, chaque noeud doit formater son répertoire avec le **même `cluster.id`** :
 
 ```bash
 KAFKA_CLUSTER_ID="$(kafka-storage.sh random-uuid)"
@@ -263,9 +262,9 @@ Bootstrap metadata: BootstrapMetadata(records=[...], metadataVersionLevel=..., s
 Formatting dynamic metadata voter directory /var/lib/kafka-standalone/data with metadata.version 4.4-IV2.
 ```
 
-> `--standalone` initialise un **quorum dynamique** (KIP-853) d'un seul contrôleur, qui pourra être
-> étendu à chaud avec `kafka-metadata-quorum.sh add-controller`. Le cluster Docker du TP02 utilise au
-> contraire un quorum **statique** (`controller.quorum.voters`).
+> `--standalone` initialise un **quorum dynamique** (KIP-853) d'un seul contrôleur, qui pourra être étendu à chaud avec `kafka-metadata-quorum.sh add-controller`.
+
+> Le cluster Docker du TP02 utilise au contraire un quorum **statique** (`controller.quorum.voters`).
 
 Relancer la commande montre la protection contre un reformatage accidentel :
 
