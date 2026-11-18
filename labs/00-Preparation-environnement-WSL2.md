@@ -1,7 +1,9 @@
-# TP00 – Préparation du poste : WSL2, Docker, Java 21 et réglages système
+## TP00 – Préparation du poste : WSL2, Docker, Java 21 et réglages système
 
 > **Formation Apache Kafka 4.4 (KRaft) – projet `KAFKA-KRAFT`**
+> 
 > Durée : 45 min (à réaliser avant la formation si possible)
+> 
 > Poste : Windows 10/11 + **WSL2 / Ubuntu 24.04 LTS**
 
 ---
