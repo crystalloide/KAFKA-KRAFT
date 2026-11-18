@@ -1504,8 +1504,14 @@ Dynamic configs for topic test-defauts are:
 __consumer_offsets
 ```
 
-> `__consumer_offsets` (50 partitions) est créé au premier usage d'un consumer group ;
-> `__transaction_state` au premier producer transactionnel ; `__share_group_state` au premier share group.
+___
+>** A retenir :**
+>
+> **`__consumer_offsets`** (50 partitions) est créé au premier usage d'un consumer group ;
+>
+> **`__transaction_state`** est créé au premier usage d'un au premier producer transactionnel ;
+>
+> **`__share_group_state`** est créé au premier usage d'un au premier share group.
 
 ---
 
