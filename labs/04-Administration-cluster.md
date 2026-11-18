@@ -334,7 +334,7 @@ kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic large-message --
 
 ---
 
-## Partie C – Quotas (ex-TP38)
+## Partie C – Quotas :
 
 Les quotas protègent le cluster contre un client qui monopoliserait les ressources. Entités :
 `users` (principal authentifié), `clients` (`client.id`), combinaison des deux, ou valeurs par défaut.
@@ -372,8 +372,12 @@ kafka-configs.sh --bootstrap-server $BOOTSTRAP --alter --entity-type clients --e
   --delete-config producer_byte_rate,consumer_byte_rate
 ```
 
-Ordre de priorité (du plus spécifique au plus général) : `/users/<u>/clients/<c>` > `/users/<u>/clients/<défaut>`
+> **Ordre de priorité (du plus spécifique au plus général) :** 
+>
+> `/users/<u>/clients/<c>` > `/users/<u>/clients/<défaut>`
+> 
 > `/users/<u>` > `/users/<défaut>/clients/<c>` > `/users/<défaut>/clients/<défaut>` > `/users/<défaut>`
+> 
 > `/clients/<c>` > `/clients/<défaut>`. Autre type : `request_percentage` (temps CPU des threads réseau/IO).
 
 ---
