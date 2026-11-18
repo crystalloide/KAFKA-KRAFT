@@ -283,7 +283,7 @@ Offset:8	C-005	{"name":"Emma Robert","city":"Nantes","loyalty":"GOLD"}
 > Usages : état courant d'entités (référentiels, `__consumer_offsets`, topics internes de Kafka Connect et
 > Kafka Streams *changelog*), tables ksqlDB.
 
-### B.4 Grands messages (ex-TP34)
+### B.4 Grands messages 
 
 La limite par défaut est **~1 Mo** par lot. Trois réglages doivent être alignés :
 producer `max.request.size`, topic `max.message.bytes` (broker : `message.max.bytes`), et éventuellement
