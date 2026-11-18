@@ -1365,7 +1365,11 @@ kafka-topics.sh --bootstrap-server $BOOTSTRAP --list --exclude-internal
 
 ```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --create --topic placement-explicite --replica-assignment "13:12,11:12"
+```
+```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --describe --topic placement-explicite
+```
+```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --create --topic placement-ko --replica-assignment "13:14,14:12"
 ```
 
@@ -1379,10 +1383,20 @@ Error while executing topic command : The manual partition assignment includes b
 
 ```bash
 kafka-configs.sh --bootstrap-server $BOOTSTRAP --entity-type topics --entity-name test-defauts --alter --add-config retention.ms=3600000
+```
+```bash
 kafka-configs.sh --bootstrap-server $BOOTSTRAP --entity-type topics --entity-name test-defauts --describe
+```
+```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --describe --topics-with-overrides
+```
+```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --list | grep '^__'
+```
+```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --delete --topic test-defauts
+```
+```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --delete --topic placement-explicite
 ```
 
@@ -1426,6 +1440,8 @@ Même clé ⇒ même partition ⇒ ordre préservé pour cette clé.
 
 ```bash
 docker exec broker-1 ls /var/lib/kafka/data | grep test-formation
+```
+```bash
 docker exec broker-2 ls /var/lib/kafka/data | grep test-formation
 ```
 
@@ -1441,7 +1457,11 @@ Topic de test et producteur à 10 messages/s dans un **terminal dédié** (laiss
 
 ```bash
 source ~/KAFKA-KRAFT/scripts/kafka-env.sh
+```
+```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --create --topic resilience --partitions 3 --replication-factor 3
+```
+```bash
 kafka-producer-perf-test.sh --bootstrap-server $BOOTSTRAP --topic resilience \
   --num-records 1000000 --record-size 100 --throughput 10 --reporting-interval 5000 \
   --command-property acks=all delivery.timeout.ms=15000 request.timeout.ms=5000
