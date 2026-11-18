@@ -1,4 +1,4 @@
-# KAFKA-KRAFT – Travaux pratiques Apache Kafka 4.4 (mode KRaft)
+## KAFKA-KRAFT – Travaux pratiques Apache Kafka 4.4 (mode KRaft)
 
 Environnement et handlabs de la formation **Apache Kafka – 2 jours (14 h)** :
 Kafka **4.4.0** en mode **KRaft**, Java **21**, Spring Boot **4.1** / Spring for Apache Kafka **4.1**,
