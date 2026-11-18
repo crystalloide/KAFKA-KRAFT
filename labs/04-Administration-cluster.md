@@ -715,7 +715,7 @@ docker exec broker-1 du -sh /var/lib/kafka/data
 
 ---
 
-## Synthèse – aide-mémoire (cheat sheet mise à jour de TP07a, sans ZooKeeper)
+## Synthèse – aide-mémoire 
 
 | Action | Commande |
 |---|---|
