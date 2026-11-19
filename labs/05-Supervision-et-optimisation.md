@@ -1619,9 +1619,12 @@ controller-2	1
 > Le filtre `role="broker"` (étiquette ajoutée par `prometheus.yml`) écarte les contrôleurs : ils exposent eux aussi les métriques `BrokerTopicMetrics`, toujours à 0.
 >
 
-> L'état Raft vient de la règle `current-state` de `config/jmx-exporter/kafka.yml` ; pour le vérifier à la source sur un broker :
+> L'état Raft vient de la règle `current-state` de `config/jmx-exporter/kafka.yml` => pour le vérifier à la source :
 ```bash
-docker exec controller-1 wget -qO- http://localhost:9404/metrics | grep raft_metrics_current_state` (`state="leader"` ou `state="follower"` ; `state="observer"
+docker exec controller-1 wget -qO- http://localhost:9404/metrics | grep raft_metrics_current_state
+```
+```text
+(`state="leader"` ou `state="follower"` /  `state="observer" sur un broker 
 ```
 
 > ```text
