@@ -547,7 +547,7 @@ nouveau le texte : les comptes continuent de croître (aucune perte d'état).
 Arrêtez toutes les instances puis :
 
 ```bash
-kafka-streams-application-reset.sh --bootstrap-server $BOOTSTRAP --application-id wordcount-app --input-topics words-input
+kafka-streams-application-reset.sh --bootstrap-server $BOOTSTRAP --application-id wordcount-app --input-topics words-input --force
 rm -rf /tmp/kafka-streams/wordcount-app
 ```
 
