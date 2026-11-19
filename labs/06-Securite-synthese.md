@@ -1,4 +1,4 @@
-# TP06 – Sécuriser un cluster Kafka (fiche de synthèse, sans manipulation)
+## TP06 – Sécuriser un cluster Kafka (fiche de synthèse, sans manipulation)
 
 > **Chapitre 6 du programme** – Objectif pédagogique n°7 : *à évoquer de façon synthétique*
 > Durée : 30 min (présentation commentée par le formateur, **pas de travaux pratiques**)
