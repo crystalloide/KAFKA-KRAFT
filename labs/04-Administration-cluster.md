@@ -102,8 +102,11 @@ kafka-configs.sh --bootstrap-server $BOOTSTRAP --entity-type brokers --entity-na
 kafka-configs.sh --bootstrap-server $BOOTSTRAP --entity-type brokers --entity-default --alter --delete-config log.cleaner.threads
 ```
 
-> Les configurations dynamiques sont stockées dans le **journal des métadonnées KRaft** : elles survivent
-> aux redémarrages et sont appliquées à tout nouveau broker. Elles priment sur `server.properties`.
+> Les configurations dynamiques sont stockées dans le **journal des métadonnées KRaft** :
+> 
+> elles survivent aux redémarrages et sont appliquées à tout nouveau broker.
+> 
+> Elles priment sur `server.properties`.
 
 ### A.3 Inspecter le journal des métadonnées (sur un contrôleur)
 
