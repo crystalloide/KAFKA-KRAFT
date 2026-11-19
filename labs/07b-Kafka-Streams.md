@@ -1,4 +1,4 @@
-# TP07b – Kafka Streams : traitement de flux
+## TP07b – Kafka Streams : traitement de flux
 
 > **Chapitre 7 du programme (écosystème)** – Objectif pédagogique n°6
 > Durée : 1 h 30
