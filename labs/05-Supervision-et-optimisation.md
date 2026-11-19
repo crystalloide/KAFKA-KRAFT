@@ -1554,6 +1554,13 @@ sum by (instance) (rate(kafka_server_brokertopicmetrics_messagesin_total{topic="
 kafka_server_raft_metrics_current_state{state="leader"}
 ```
 
+> **Résultat sans étiquette.** `sum(...)` et `max(...)` sans `by (...)` agrègent toutes les séries en
+> une seule, qui n'a **aucune étiquette** : dans l'onglet *Table*, la ligne de résultat a une colonne
+> d'étiquettes vide (ou `{}`) et la valeur (`1`, `3`) s'affiche tout à droite ; dans *Graph*, c'est une
+> ligne plate. Pour voir le détail par contrôleur, retirez l'agrégation :
+> `kafka_controller_kafkacontroller_activecontrollercount` (3 lignes : `1` pour le contrôleur actif,
+> `0` pour les deux autres) et `kafka_controller_kafkacontroller_activebrokercount` (3 lignes à `3`).
+>
 > Ce champ n'accepte que du PromQL : une commande shell (`q() {...}`, `curl`...) y provoque l'erreur
 > `parse error: unknown function with name "q"`.
 >
