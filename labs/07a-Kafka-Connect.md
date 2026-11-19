@@ -1,11 +1,10 @@
 # TP07a – Kafka Connect : intégration de données
 
 > **Chapitre 7 du programme (écosystème)** – Objectif pédagogique n°5
+> 
 > Durée : 1 h 30
+> 
 > Pré-requis : cluster du TP02, outils CLI (TP01), `source ~/KAFKA-KRAFT/scripts/kafka-env.sh`
-> Reprend et met à jour : TP08 (stand-alone), TP09 (JSON et schémas), TP10 (SMT), TP11 (chaînage des SMT),
-> TP28 (génération de données) ; ajout du mode **distribué**, de la **Dead Letter Queue** et d'un pipeline
-> **PostgreSQL → Kafka → PostgreSQL** (CDC Debezium)
 
 ---
 
