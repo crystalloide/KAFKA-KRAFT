@@ -1623,8 +1623,10 @@ controller-2	1
 ```bash
 docker exec controller-1 wget -qO- http://localhost:9404/metrics | grep raft_metrics_current_state
 ```
+Affichage en retour :
+
 ```text
-(`state="leader"` ou `state="follower"` /  `state="observer" sur un broker 
+Etats possibles : leader, candidate, voted, follower, unattached, observer
 ```
 
 > ```text
