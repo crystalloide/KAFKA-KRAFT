@@ -461,10 +461,54 @@ kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic words-output --f
 ```
 
 ```text
-topic	6
-un	4
-de	3
-les	5
+plateforme      1
+decoupe         1
+en              1
+consumer        1
+entre           1
+membres         1
+kafka           2
+transforme      1
+evenements      4
+remplace        1
+par             1
+quorum          1
+de              2
+streaming       1
+sur             1
+plusieurs       1
+producers       1
+ecrivent        1
+dans            1
+consumers       1
+lisent          1
+memorisent      1
+leur            1
+offset          1
+vers            1
+zookeeper       1
+une             1
+distribuee      1
+est             2
+repliquees      1
+brokers         1
+du              1
+et              1
+group           1
+partage         1
+partitions      3
+ses             1
+streams         1
+les             7
+d               2
+autre           1
+topic           4
+le              1
+mode            1
+kraft           1
+un              5
+controleurs     1
+
 ...
 ```
 
