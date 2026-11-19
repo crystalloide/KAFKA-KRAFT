@@ -121,28 +121,72 @@ cd ~/KAFKA-KRAFT
 docker compose exec ksqldb-server ksql http://localhost:8088
 ```
 
-Dans la CLI `ksql>`, coller **dans l'ordre** : le `SET`, le `CREATE STREAM`, puis les deux `CREATE TABLE`.
+### Dans la CLI `ksql>`, coller **dans l'ordre** : 
 
+#### le `SET` : 
+
+```sql
+SET 'auto.offset.reset' = 'earliest';
+```
+
+#### le `CREATE STREAM` :
+```sql
+CREATE STREAM riderLocations (profileId VARCHAR, latitude DOUBLE, longitude DOUBLE)
+  WITH (KAFKA_TOPIC='locations', VALUE_FORMAT='JSON', PARTITIONS=1, REPLICAS=3);
+```
+
+#### puis les deux `CREATE TABLE` :
+```sql
+CREATE TABLE currentLocation AS
+  SELECT profileId,
+         LATEST_BY_OFFSET(latitude)  AS la,
+         LATEST_BY_OFFSET(longitude) AS lo
+  FROM riderLocations
+  GROUP BY profileId
+  EMIT CHANGES;
+
+CREATE TABLE ridersNearMountainView AS
+  SELECT ROUND(GEO_DISTANCE(la, lo, 37.4133, -122.1162), -1) AS distanceInMiles,
+         COLLECT_LIST(profileId) AS riders,
+         COUNT(*) AS count
+  FROM currentLocation
+  GROUP BY ROUND(GEO_DISTANCE(la, lo, 37.4133, -122.1162), -1);
+```
+
+#### Vérifions  :
 ```sql
 SHOW STREAMS;
 SHOW TABLES;
 ```
 
-Ouvrir une **requête push** (elle reste ouverte) :
-
+#### Ouvrons une **requête push** (elle reste ouverte) :
 ```sql
 SELECT * FROM riderLocations
   WHERE GEO_DISTANCE(latitude, longitude, 37.4133, -122.1162) <= 5 EMIT CHANGES;
 ```
 
-Dans un **terminal 2**, ouvrir une seconde CLI et insérer les positions (les 6 `INSERT INTO` du script) :
+___
+
+Dans un **terminal 2**, ouvrir une seconde CLI  :
 
 ```bash
 cd ~/KAFKA-KRAFT
 docker compose exec ksqldb-server ksql http://localhost:8088
 ```
 
-Le terminal 1 affiche au fil de l'eau les 3 coureurs situés à moins de 5 km :
+#### et insérer les positions (les 6 `INSERT INTO` du script) :
+
+```SQL
+INSERT INTO riderLocations (profileId, latitude, longitude) VALUES ('c2309eec', 37.7877, -122.4205);
+INSERT INTO riderLocations (profileId, latitude, longitude) VALUES ('18f4ea86', 37.3903, -122.0643);
+INSERT INTO riderLocations (profileId, latitude, longitude) VALUES ('4ab5cbad', 37.3952, -122.0813);
+INSERT INTO riderLocations (profileId, latitude, longitude) VALUES ('8b6eae59', 37.3944, -122.0813);
+INSERT INTO riderLocations (profileId, latitude, longitude) VALUES ('4a7c7b41', 37.4049, -122.0822);
+INSERT INTO riderLocations (profileId, latitude, longitude) VALUES ('4ddad000', 37.7857, -122.4011);
+```
+___
+
+#### Le terminal 1 affiche au fil de l'eau les 3 coureurs situés à moins de 5 km :
 
 ```text
 +-----------+-----------+------------+
@@ -153,7 +197,9 @@ Le terminal 1 affiche au fil de l'eau les 3 coureurs situés à moins de 5 km :
 |4a7c7b41   |37.4049    |-122.0822   |
 ```
 
-`Ctrl+C` pour arrêter la requête push. Requêtes **pull** (réponse immédiate puis fin) :
+`Ctrl+C` pour arrêter la requête push. 
+
+Requêtes **pull** (réponse immédiate puis fin) :
 
 ```sql
 SELECT * FROM currentLocation WHERE profileId = '4ab5cbad';
