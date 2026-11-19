@@ -128,10 +128,14 @@ docker exec -e KAFKA_OPTS= controller-1 /opt/kafka/bin/kafka-dump-log.sh --clust
 | `max.message.bytes` | ~1 Mo | taille max d'un lot de messages |
 | `min.insync.replicas` | valeur du broker | durabilité en `acks=all` |
 
-> La suppression se fait **par segment entier**, lors d'une vérification périodique
-> (`log.retention.check.interval.ms`, 5 min ici). Pour la rétention par durée, le segment **actif** est
-> supprimé lui aussi quand tous ses messages ont expiré : Kafka crée d'abord un nouveau segment vide.
-> Les offsets ne repartent **jamais** à 0. (La compaction, elle, ne touche jamais le segment actif.)
+> La suppression se fait **par segment entier**, lors d'une vérification périodique (`log.retention.check.interval.ms`, 5 min ici).
+>
+> Pour la rétention par durée, le segment **actif** est supprimé lui aussi quand tous ses messages ont expiré :
+> Kafka crée d'abord un nouveau segment vide.
+>
+> Les offsets ne repartent **jamais** à 0.
+>
+> La compaction, elle, ne touche jamais le segment actif.
 
 ```bash
 kafka-topics.sh --bootstrap-server $BOOTSTRAP --create --topic retention-demo --partitions 1 --replication-factor 3 \
