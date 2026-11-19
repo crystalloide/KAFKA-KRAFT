@@ -711,8 +711,12 @@ kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --describe --group spring
 curl -s localhost:8085/actuator/prometheus | grep -m3 '^kafka_stream'
 ```
 
-> Spring apporte : configuration par `application.yml` (`spring.kafka.streams.*`), cycle de vie,
-> métriques Micrometer, `StreamsBuilderFactoryBean` (accès à l'objet `KafkaStreams`), sérialiseurs JSON.
+> Spring apporte :
+> - configuration par `application.yml` (`spring.kafka.streams.*`),
+> - cycle de vie,
+> - métriques Micrometer,
+> - `StreamsBuilderFactoryBean` (accès à l'objet `KafkaStreams`),
+> - sérialiseurs JSON
 
 Arrêtez l'application (Ctrl+C).
 
