@@ -1699,7 +1699,7 @@ Résultats :
 > C'est la **tendance** qui compte :
 > 
 > - lots + compression = débit nettement supérieur,
-> - 
+>  
 > - `acks=1` réduit la latence au prix de la durabilité.
 > 
 > Option utile : `--print-metrics` (métriques détaillées du producteur).
