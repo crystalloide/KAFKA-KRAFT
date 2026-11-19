@@ -744,9 +744,17 @@ docker compose exec postgres psql -U postgres -d formation -c "SELECT id, first_
 
 ```bash
 curl -s -X PUT localhost:8083/connectors/pg-customers-source/pause
+``
+``bash
 curl -s localhost:8083/connectors/pg-customers-source/status | jq -r .connector.state
+``
+``bash
 curl -s -X PUT localhost:8083/connectors/pg-customers-source/resume
+``
+``bash
 curl -s -X POST "localhost:8083/connectors/jdbc-customers-sink/restart?includeTasks=true&onlyFailed=true" | jq
+``
+``bash
 kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --describe --group connect-jdbc-customers-sink
 ```
 
@@ -757,8 +765,7 @@ GROUP                        TOPIC                    PARTITION  CURRENT-OFFSET 
 connect-jdbc-customers-sink  pg.inventory.customers   0          ...             ...             0
 ```
 
-> Un connecteur **sink** est un consumer group nommé `connect-<nom du connecteur>` : son lag se surveille
-> comme celui de n'importe quelle application (TP05).
+> Un connecteur **sink** est un consumer group nommé `connect-<nom du connecteur>` : son lag se surveille comme celui de n'importe quelle application (TP05).
 
 ---
 
@@ -772,8 +779,7 @@ docker compose exec postgres psql -U postgres -d formation -c "SELECT pg_drop_re
 docker compose --profile connect stop
 ```
 
-> Supprimer le slot de réplication est important : un slot inutilisé empêche PostgreSQL de recycler ses
-> journaux WAL (le disque se remplit).
+> Supprimer le slot de réplication est important : un slot inutilisé empêche PostgreSQL de recycler ses journaux WAL (le disque se remplit).
 
 ### Ce qu'il faut retenir
 
