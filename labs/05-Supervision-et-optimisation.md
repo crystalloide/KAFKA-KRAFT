@@ -59,7 +59,7 @@
 | Latence | `RequestMetrics/TotalTimeMs` (p99, `request=Produce/FetchConsumer`) | `kafka_network_requestmetrics_totaltimems{quantile="0.99"}` | selon SLA (ex. < 100 ms) |
 | Débit | `BrokerTopicMetrics/MessagesInPerSec`, `BytesInPerSec`, `BytesOutPerSec` | `kafka_server_brokertopicmetrics_*_total` | tendance, pics |
 | Consommateurs | lag par groupe/partition | `kafka_consumergroup_lag` (kafka-exporter) | selon SLA (alerte > 1000 ici) |
-| KRaft | `raft-metrics` : `current-state`, `commit-latency-avg` | `kafka_server_raft_metrics_current_state_info` | 1 leader |
+| KRaft | `raft-metrics` : `current-state`, `commit-latency-avg` | `kafka_server_raft_metrics_current_state` | 1 leader |
 | JVM | heap, GC | `jvm_memory_used_bytes`, `jvm_gc_*` | heap < 85 % |
 | Système | disque, CPU, réseau, descripteurs | node-exporter (non déployé ici) | disque < 70-80 % |
 
@@ -1345,7 +1345,7 @@ cat > config/grafana/dashboards/kafka-overview.json <<'EOF_KAFKA_KRAFT'
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "kafka_server_raft_metrics_current_state_info{role=\"controller\",state=\"leader\"}",
+          "expr": "kafka_server_raft_metrics_current_state{role=\"controller\",state=\"leader\"}",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }
@@ -1551,7 +1551,7 @@ sum by (instance) (rate(kafka_server_brokertopicmetrics_messagesin_total{topic="
 ```
 
 ```text
-kafka_server_raft_metrics_current_state_info{state="leader"}
+kafka_server_raft_metrics_current_state{state="leader"}
 ```
 
 > Ce champ n'accepte que du PromQL : une commande shell (`q() {...}`, `curl`...) y provoque l'erreur
@@ -1578,7 +1578,7 @@ Puis on l'appelle avec l'expression PromQL entre apostrophes :
 q 'sum(kafka_controller_kafkacontroller_activecontrollercount)'
 q 'max(kafka_controller_kafkacontroller_activebrokercount)'
 q 'sum by (instance) (rate(kafka_server_brokertopicmetrics_messagesin_total{topic="",role="broker"}[1m]))'
-q 'kafka_server_raft_metrics_current_state_info{state="leader"}'
+q 'kafka_server_raft_metrics_current_state{state="leader"}'
 ```
 
 ```text
@@ -1598,8 +1598,12 @@ cela peut être un autre contrôleur). Le `-` indique un résultat agrégé, san
 > exposent eux aussi les métriques `BrokerTopicMetrics`, toujours à 0. L'état Raft vient de la règle
 > `current-state` de `config/jmx-exporter/kafka.yml` ; pour le vérifier à la source :
 > `docker exec controller-1 wget -qO- http://localhost:9404/metrics | grep raft_metrics_current_state`
-> (`state="leader"` ou `state="follower"` ; `state="observer"` sur un broker).
-
+> (`state="leader"` ou `state="follower"` ; `state="observer"` sur un broker) :
+>
+> ```text
+> # TYPE kafka_server_raft_metrics_current_state gauge
+> kafka_server_raft_metrics_current_state{state="follower"} 1.0
+> ```
 
 ### B.4 Grafana
 

@@ -733,8 +733,10 @@ rules:
   name: kafka_coordinator_$1_$2_$3
   type: GAUGE
 # Kraft current state info metric rule
+# (nom sans suffixe "_info" : l'exporteur supprime ce suffixe réservé ; le nom publié
+#  est donc kafka_server_raft_metrics_current_state{state="leader|follower|observer|..."})
 - pattern: "kafka.server<type=raft-metrics><>current-state: ([a-z]+)"
-  name: kafka_server_raft_metrics_current_state_info
+  name: kafka_server_raft_metrics_current_state
   type: GAUGE
   value: 1
   labels:
