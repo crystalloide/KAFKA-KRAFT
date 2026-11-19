@@ -18,7 +18,10 @@ public class OrderListener {
 
     private static final Logger log = LoggerFactory.getLogger(OrderListener.class);
 
-    @KafkaListener(id = "order-listener", topics = "orders", groupId = "order-service", concurrency = "3")
+    // clientIdPrefix : client.id = order-listener-0, -1, -2 (un par thread), au lieu de
+    // spring-kafka-demo-N partagé avec les autres listeners -> métriques et logs identifiables
+    @KafkaListener(id = "order-listener", clientIdPrefix = "order-listener", topics = "orders",
+            groupId = "order-service", concurrency = "3")
     public void onOrder(ConsumerRecord<String, Order> record, Acknowledgment ack) {
         Order order = record.value();
         log.info("Reçu {} (client {}, {} x {}) partition={} offset={}", order.orderId(), order.customerId(),

@@ -45,7 +45,8 @@ public class DltListener implements ConsumerSeekAware {
         callback.seekToBeginning(assignments.keySet());
     }
 
-    @KafkaListener(id = "dlt-listener", topics = "orders-dlt", groupId = "order-dlt-monitor")
+    @KafkaListener(id = "dlt-listener", clientIdPrefix = "dlt-listener", topics = "orders-dlt",
+            groupId = "order-dlt-monitor")
     public void onDeadLetter(ConsumerRecord<String, Order> record, Acknowledgment ack) {
         String orderId = record.value() == null ? "illisible" : record.value().orderId();
         String cause = rootMessage(header(record, KafkaHeaders.DLT_EXCEPTION_MESSAGE));
