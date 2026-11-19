@@ -1531,9 +1531,17 @@ Requêtes PromQL à tester dans <http://localhost:9090/query> (ou en ligne de co
 
 ```bash
 q() { curl -s --get localhost:9090/api/v1/query --data-urlencode "query=$1" | jq -r '.data.result[] | "\(.metric.instance // .metric.consumergroup // "-")\t\(.value[1])"'; }
+```
+```bash
 q 'sum(kafka_controller_kafkacontroller_activecontrollercount)'
+```
+```bash
 q 'max(kafka_controller_kafkacontroller_activebrokercount)'
+```
+```bash
 q 'sum by (instance) (rate(kafka_server_brokertopicmetrics_messagesin_total{topic=""}[1m]))'
+```
+```bash
 q 'kafka_server_raft_metrics_current_state_info{state="leader"}'
 ```
 
