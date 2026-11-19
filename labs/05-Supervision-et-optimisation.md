@@ -1708,12 +1708,14 @@ Résultats :
 
 ```bash
 kafka-consumer-perf-test.sh --bootstrap-server $BOOTSTRAP --topic perf-test --num-records 400000 --group perf-consumer --timeout 60000
+```
+```bash
 kafka-consumer-perf-test.sh --bootstrap-server $BOOTSTRAP --topic perf-test --num-records 400000 --group perf-consumer-2 --timeout 60000 \
   --command-property fetch.min.bytes=1048576 --command-property fetch.max.wait.ms=500 --command-property max.partition.fetch.bytes=4194304
 ```
 
-> Attention : `kafka-consumer-perf-test.sh` (comme les outils *console*) attend **un** `--command-property`
-> par propriété, alors que `kafka-producer-perf-test.sh` accepte plusieurs propriétés après un seul.
+> Attention : `kafka-consumer-perf-test.sh` (comme les outils *console*) attend **un** `--command-property` par propriété,
+> alors que `kafka-producer-perf-test.sh` accepte plusieurs propriétés après un seul`--command-property` 
 
 ```text
 start.time, end.time, data.consumed.in.MB, MB.sec, data.consumed.in.nMsg, nMsg.sec, rebalance.time.ms, fetch.time.ms, fetch.MB.sec, fetch.nMsg.sec
