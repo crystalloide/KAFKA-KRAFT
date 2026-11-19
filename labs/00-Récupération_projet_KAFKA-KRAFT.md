@@ -73,3 +73,17 @@ git clone https://github.com/crystalloide/KAFKA-KRAFT.git
 cd ~/KAFKA-KRAFT
 ls
 ```
+
+## 2. Persister des infos utiles ensuite 
+
+```bash
+grep -q 'KAFKA-KRAFT/scripts/kafka-env.sh' ~/.bashrc || cat >> ~/.bashrc <<'EOF'
+
+# Variables et alias des TP Kafka (BOOTSTRAP, PATH vers /opt/kafka/bin, alias kt/kcg/kcfg)
+[ -f ~/KAFKA-KRAFT/scripts/kafka-env.sh ] && source ~/KAFKA-KRAFT/scripts/kafka-env.sh
+EOF
+```
+
+```bash
+source ~/.bashrc
+```
