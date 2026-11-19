@@ -1,4 +1,4 @@
-# TP07a – Kafka Connect : intégration de données
+## TP07a – Kafka Connect : intégration de données
 
 > **Chapitre 7 du programme (écosystème)** – Objectif pédagogique n°5
 > 
