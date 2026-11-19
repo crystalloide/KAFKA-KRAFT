@@ -22,7 +22,9 @@ public class StreamsFlatMap {
                 .flatMap((key, value) -> {
                     List<KeyValue<String, String>> result = new ArrayList<>();
                     if (value != null) {
-                        for (String word : value.toLowerCase().split("\\W+")) {
+                        // [^\\p{L}\\p{N}]+ : tout ce qui n'est ni lettre ni chiffre (Unicode) sépare les mots.
+                        // (\\W+ ne connaît que les lettres ASCII : "découpée" donnerait d / coup / e)
+                        for (String word : value.toLowerCase().split("[^\\p{L}\\p{N}]+")) {
                             if (!word.isBlank()) {
                                 result.add(KeyValue.pair(word, key == null ? "" : key));
                             }

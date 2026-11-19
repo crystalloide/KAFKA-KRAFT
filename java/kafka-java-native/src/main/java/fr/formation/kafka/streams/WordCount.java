@@ -30,7 +30,8 @@ public class WordCount {
 
         StreamsBuilder builder = new StreamsBuilder();
         KTable<String, Long> counts = builder.<String, String>stream("words-input")
-                .flatMapValues(line -> Arrays.asList(line.toLowerCase().split("\\W+")))
+                // séparateur = tout ce qui n'est ni lettre ni chiffre (Unicode : lettres accentuées comprises)
+                .flatMapValues(line -> Arrays.asList(line.toLowerCase().split("[^\\p{L}\\p{N}]+")))
                 .filter((key, word) -> !word.isBlank())
                 .groupBy((key, word) -> word, Grouped.with(Serdes.String(), Serdes.String()))
                 .count(Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as("word-counts")
