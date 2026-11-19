@@ -60,10 +60,18 @@ Certains paramètres sont **dynamiques** (*read-only*, *per-broker* ou *cluster-
 ```bash
 # Pour un seul broker
 kafka-configs.sh --bootstrap-server $BOOTSTRAP --entity-type brokers --entity-name 11 --alter --add-config num.io.threads=12
+```
+```bash
 # Pour tous les brokers (valeur par défaut dynamique du cluster)
 kafka-configs.sh --bootstrap-server $BOOTSTRAP --entity-type brokers --entity-default --alter --add-config log.cleaner.threads=2
+```
+```bash
 kafka-configs.sh --bootstrap-server $BOOTSTRAP --entity-type brokers --entity-name 11 --describe
+```
+```bash
 kafka-configs.sh --bootstrap-server $BOOTSTRAP --entity-type brokers --entity-default --describe
+```
+```bash
 docker compose logs broker-1 --since 2m | grep -i "num.io.threads" | head -3
 ```
 
