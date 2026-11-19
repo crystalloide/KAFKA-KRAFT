@@ -1,8 +1,10 @@
 ## TP08 – Conclusion : bilan, futur de Kafka, ressources et quiz final
 
 > **Chapitre 8 du programme**
+> 
 > Durée : 30 min
-> Reprend et met à jour : TP07 et TP12 (quiz Kafka / Kafka Connect et SMT) → quiz Kafka 4.4 KRaft
+> 
+> Quiz fianl Kafka 4.4 KRaft
 
 ---
 
