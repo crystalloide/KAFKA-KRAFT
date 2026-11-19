@@ -1,9 +1,12 @@
 # TP07d – ksqlDB : traitement de flux en SQL
 
 > **Chapitre 7 du programme (écosystème)**
+> 
 > Durée : 45 min
+> 
 > Pré-requis : cluster du TP02, `source ~/KAFKA-KRAFT/scripts/kafka-env.sh`
-> Reprend et met à jour : TP21 (ksqlDB « riders ») → **ksqlDB (Confluent 8.4)** sur Kafka 4.4 KRaft, plus un cas d'usage « commandes »
+> 
+> ksqlDB « riders ») → **ksqlDB (Confluent 8.4)** sur Kafka 4.4 KRaft, plus un cas d'usage « commandes »
 
 ---
 
