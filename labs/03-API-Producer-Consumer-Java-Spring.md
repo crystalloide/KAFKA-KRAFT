@@ -497,6 +497,7 @@ Compilation (le premier lancement télécharge les dépendances depuis Maven Cen
 ```bash
 cd ~/KAFKA-KRAFT/java/kafka-java-native
 mvn -q -DskipTests package && echo "BUILD OK"
+chmod +x run.sh
 ./run.sh
 ```
 
