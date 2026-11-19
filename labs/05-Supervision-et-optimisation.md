@@ -1609,16 +1609,21 @@ controller-2	1
 #### Lecture : 
 
 > **1** contrôleur actif (jamais 0, jamais 2),
+> 
 > **3** brokers actifs, débit entrant par broker (0 si aucun producteur ne tourne),
+> 
 > et le contrôleur **leader** du quorum KRaft (ici `controller-2` ; cela peut être un autre contrôleur).
+> 
 > Le `-` indique un résultat agrégé, sans étiquette `instance`.
 
-> Le filtre `role="broker"` (étiquette ajoutée par `prometheus.yml`) écarte les contrôleurs : ils
-> exposent eux aussi les métriques `BrokerTopicMetrics`, toujours à 0. L'état Raft vient de la règle
-> `current-state` de `config/jmx-exporter/kafka.yml` ; pour le vérifier à la source :
-> `docker exec controller-1 wget -qO- http://localhost:9404/metrics | grep raft_metrics_current_state`
-> (`state="leader"` ou `state="follower"` ; `state="observer"` sur un broker) :
+> Le filtre `role="broker"` (étiquette ajoutée par `prometheus.yml`) écarte les contrôleurs : ils exposent eux aussi les métriques `BrokerTopicMetrics`, toujours à 0.
 >
+
+> L'état Raft vient de la règle `current-state` de `config/jmx-exporter/kafka.yml` ; pour le vérifier à la source sur un broker :
+```bash
+docker exec controller-1 wget -qO- http://localhost:9404/metrics | grep raft_metrics_current_state` (`state="leader"` ou `state="follower"` ; `state="observer"
+```
+
 > ```text
 > # TYPE kafka_server_raft_metrics_current_state gauge
 > kafka_server_raft_metrics_current_state{state="follower"} 1.0
