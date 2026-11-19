@@ -2112,6 +2112,7 @@ cat > java/spring-kafka-demo/src/main/java/fr/formation/kafka/spring/producer/Tr
 package fr.formation.kafka.spring.producer;
 
 import fr.formation.kafka.spring.model.Order;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -2139,6 +2140,8 @@ public class TransactionalOrderService implements DisposableBean {
 
     public TransactionalOrderService(KafkaProperties kafkaProperties) {
         Map<String, Object> config = kafkaProperties.buildProducerProperties();
+        // client.id distinct du producer auto-configuré (spring-kafka-demo-N) : order-tx-producer-N
+        config.put(ProducerConfig.CLIENT_ID_CONFIG, "order-tx-producer");
         this.producerFactory = new DefaultKafkaProducerFactory<>(config);
         this.producerFactory.setTransactionIdPrefix("order-tx-");
         this.transactionalTemplate = new KafkaTemplate<>(producerFactory);
@@ -2194,7 +2197,10 @@ public class OrderListener {
 
     private static final Logger log = LoggerFactory.getLogger(OrderListener.class);
 
-    @KafkaListener(id = "order-listener", topics = "orders", groupId = "order-service", concurrency = "3")
+    // clientIdPrefix : client.id = order-listener-0, -1, -2 (un par thread), au lieu de
+    // spring-kafka-demo-N partagé avec les autres listeners -> métriques et logs identifiables
+    @KafkaListener(id = "order-listener", clientIdPrefix = "order-listener", topics = "orders",
+            groupId = "order-service", concurrency = "3")
     public void onOrder(ConsumerRecord<String, Order> record, Acknowledgment ack) {
         Order order = record.value();
         log.info("Reçu {} (client {}, {} x {}) partition={} offset={}", order.orderId(), order.customerId(),
@@ -2260,7 +2266,8 @@ public class DltListener implements ConsumerSeekAware {
         callback.seekToBeginning(assignments.keySet());
     }
 
-    @KafkaListener(id = "dlt-listener", topics = "orders-dlt", groupId = "order-dlt-monitor")
+    @KafkaListener(id = "dlt-listener", clientIdPrefix = "dlt-listener", topics = "orders-dlt",
+            groupId = "order-dlt-monitor")
     public void onDeadLetter(ConsumerRecord<String, Order> record, Acknowledgment ack) {
         String orderId = record.value() == null ? "illisible" : record.value().orderId();
         String cause = rootMessage(header(record, KafkaHeaders.DLT_EXCEPTION_MESSAGE));

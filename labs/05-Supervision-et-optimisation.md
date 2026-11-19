@@ -1818,27 +1818,65 @@ kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --describe --group lag-de
 
 ### D.3 (Optionnel) Métriques des clients : application Spring Boot
 
-Lancez l'application du TP03 :
+Lancez (ou relancez) l'application du TP03 **dans un terminal WSL ou IntelliJ** : Prometheus la joint
+via `host.docker.internal:8085` (job `spring-kafka-demo`).
 
 ```bash
 cd ~/KAFKA-KRAFT/java/spring-kafka-demo && mvn -q spring-boot:run
 ```
 
--> Le target `spring-kafka-demo` passe **UP** dans Prometheus. 
+Dans un autre terminal, générez un peu de trafic :
 
-Requêtes utiles :
+```bash
+curl -s -X POST "localhost:8085/api/orders/random?count=200" | jq '.sent'
+```
+
+Dans <http://localhost:9090/query>, une expression à la fois. D'abord, la cible est-elle jointe ?
+(`1` attendu ; sinon voir *Status → Target health*)
 
 ```text
-kafka_consumer_fetch_manager_records_lag_max{client_id=~".*order-listener.*"}
+up{job="spring-kafka-demo"}
 ```
-```bash
+
+Quels clients Kafka l'application expose-t-elle ? (une ligne par `client_id`)
+
+```text
+count by (client_id) (kafka_consumer_fetch_manager_records_lag_max)
+```
+
+```text
+{client_id="dlt-listener-0"}      1
+{client_id="order-listener-0"}    1
+{client_id="order-listener-1"}    1
+{client_id="order-listener-2"}    1
+```
+
+Chaque thread du `@KafkaListener` est un consommateur distinct : `concurrency = "3"` donne
+`order-listener-0`, `-1`, `-2`. Ces noms viennent de l'attribut `clientIdPrefix` de l'annotation ; sans
+lui, tous les listeners partageraient le `client.id` `spring-kafka-demo-N` (paramètre
+`spring.kafka.client-id`) et seraient impossibles à distinguer. Les mêmes noms apparaissent dans la
+colonne `CLIENT-ID` de `kafka-consumer-groups.sh --describe --group order-service --members`.
+
+Lag maximal vu par chaque thread du listener (0 quand il est à jour) :
+
+```text
+kafka_consumer_fetch_manager_records_lag_max{client_id=~"order-listener-.*"}
+```
+
+Débit d'envoi et latence des requêtes du producer de l'application :
+
+```text
 rate(kafka_producer_record_send_total[1m])
 ```
-```bash
+
+```text
 kafka_producer_request_latency_avg
 ```
 
-> L'application doit tourner **dans un terminal ou IntelliJ** ) : Prometheus la joint via `host.docker.internal`.
+> Ces métriques sont publiées par **Micrometer** (`/actuator/prometheus`) : ce sont les métriques
+> internes du client Kafka (groupe `consumer-fetch-manager-metrics`, attribut `records-lag-max` →
+> `kafka_consumer_fetch_manager_records_lag_max`), avec les étiquettes `client_id` et `spring_id`.
+> Elles complètent le lag mesuré côté cluster par kafka-exporter (`kafka_consumergroup_lag`).
 
 ---
 
