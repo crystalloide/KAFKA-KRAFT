@@ -68,6 +68,22 @@
 
 ---
 
+## 0. Persister des infos utiles ensuite 
+
+```bash
+cd ~/KAFKA-KRAFT
+grep -q 'KAFKA-KRAFT/scripts/kafka-env.sh' ~/.bashrc || cat >> ~/.bashrc <<'EOF'
+
+# Variables et alias des TP Kafka (BOOTSTRAP, PATH vers /opt/kafka/bin, alias kt/kcg/kcfg)
+[ -f ~/KAFKA-KRAFT/scripts/kafka-env.sh ] && source ~/KAFKA-KRAFT/scripts/kafka-env.sh
+EOF
+```
+
+```bash
+source ~/.bashrc
+```
+
+---
 ## Partie B – Mise en place du cluster avec Docker Compose
 
 ### B.1 Fichiers du projet
