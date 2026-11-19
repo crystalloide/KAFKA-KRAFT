@@ -223,17 +223,37 @@ postgres   Up About a minute (healthy)
 
 ```bash
 curl -s localhost:8083/ | jq
-curl -s localhost:8083/connector-plugins | jq -r '.[] | "\(.type)\t\(.class)\t\(.version)"'
-kafka-topics.sh --bootstrap-server $BOOTSTRAP --list | grep _connect
 ```
 
+Affichage : 
 ```text
-{ "version": "4.4.0", "commit": "...", "kafka_cluster_id": "PIYzDzl8TomQ84Cnrxi0gA" }
+{
+  "version": "4.4.0",
+  "commit": "1156b2752aaa28ea",
+  "kafka_cluster_id": "PIYzDzl8TomQ84Cnrxi0gA"
+}
+```
+
+```bash
+curl -s localhost:8083/connector-plugins | jq -r '.[] | "\(.type)\t\(.class)\t\(.version)"'
+```
+
+Affichage : 
+```text
 sink	org.apache.kafka.connect.file.FileStreamSinkConnector	4.4.0
 source	org.apache.kafka.connect.file.FileStreamSourceConnector	4.4.0
 source	org.apache.kafka.connect.mirror.MirrorCheckpointConnector	4.4.0
 source	org.apache.kafka.connect.mirror.MirrorHeartbeatConnector	4.4.0
 source	org.apache.kafka.connect.mirror.MirrorSourceConnector	4.4.0
+```
+
+```bash
+kafka-topics.sh --bootstrap-server $BOOTSTRAP --list | grep _connect
+```
+
+Affichage : 
+
+```text
 _connect-configs
 _connect-offsets
 _connect-status
