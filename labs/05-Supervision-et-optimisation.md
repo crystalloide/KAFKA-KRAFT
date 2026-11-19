@@ -1,4 +1,4 @@
-# TP05 – Superviser et optimiser un cluster Kafka (Prometheus / Grafana)
+## TP05 – Superviser et optimiser un cluster Kafka (Prometheus / Grafana)
 
 > **Chapitre 5 du programme** – Objectif pédagogique n°4 (exploitation)
 > Durée : 1 h 30
