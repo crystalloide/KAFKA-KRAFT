@@ -1861,6 +1861,7 @@ chmod +x scripts/stop-all.sh
 
 
 ```bash
+bash scripts/setup.sh
 ./scripts/stop-all.sh --purge  # suppression complète (tous profils, volumes inclus)
 ```
 
