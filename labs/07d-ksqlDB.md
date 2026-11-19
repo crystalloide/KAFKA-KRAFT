@@ -121,7 +121,9 @@ cd ~/KAFKA-KRAFT
 docker compose exec ksqldb-server ksql http://localhost:8088
 ```
 
-### Dans la CLI `ksql>`, coller **dans l'ordre** : 
+#### Dans la CLI `ksql` :
+
+coller **dans l'ordre** : 
 
 #### le `SET` : 
 
