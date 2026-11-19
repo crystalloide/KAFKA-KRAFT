@@ -102,9 +102,15 @@ echo "Test de message depuis Kafka Connect source" >> source.txt
 echo "une ligne de plus" >> source.txt
 sleep 3
 cat sink.txt
+```
+```bash
 kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic connect-standalone --from-beginning --timeout-ms 5000
+```
+```bash
 curl -s localhost:8084/connectors | jq
 ```
+
+Affichage : 
 
 ```text
 Test de message depuis Kafka Connect source
@@ -113,7 +119,7 @@ une ligne de plus
 ["local-file-source","local-file-sink"]
 ```
 
-Arrêtez le worker standalone (Ctrl+C) : la suite utilise le mode distribué.
+Arrêtez le worker standalone (Ctrl+C) : la suite utilise le **mode distribué**.
 
 ---
 
