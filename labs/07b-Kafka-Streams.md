@@ -88,6 +88,14 @@ final class StreamsSupport {
         props.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 1000);
         // relit le topic d'entrée depuis le début au premier démarrage
         props.put(StreamsConfig.consumerPrefix("auto.offset.reset"), "earliest");
+        // Répertoire d'état local (RocksDB), verrouillé par l'instance qui l'utilise. Par défaut
+        // /tmp/kafka-streams/<application.id> : pour lancer une 2e instance sur la MÊME machine,
+        // lui donner son propre répertoire, ex. STREAMS_STATE_DIR=/tmp/kafka-streams-2 ./run.sh ...
+        // (en production, chaque instance tourne sur sa propre machine / son propre conteneur).
+        String stateDir = System.getenv("STREAMS_STATE_DIR");
+        if (stateDir != null && !stateDir.isBlank()) {
+            props.put(StreamsConfig.STATE_DIR_CONFIG, stateDir);
+        }
         return props;
     }
 
@@ -532,23 +540,47 @@ Topic: wordcount-app-word-counts-changelog	... PartitionCount: 3	ReplicationFact
 
 ### C.1 Scalabilité et tolérance aux pannes
 
-Lancez une **seconde instance** dans un nouveau terminal (`./run.sh streams.WordCount`) :
+La première instance de `WordCount` tourne toujours (terminal 1). Lancez une **seconde instance** dans
+un nouveau terminal, avec **son propre répertoire d'état** :
+
+```bash
+cd ~/KAFKA-KRAFT/java/kafka-java-native
+STREAMS_STATE_DIR=/tmp/kafka-streams-instance2 ./run.sh streams.WordCount
+```
+
+> Chaque instance **verrouille** son répertoire d'état local (par défaut
+> `/tmp/kafka-streams/wordcount-app`). Deux instances sur la **même machine** avec le même répertoire :
+> la seconde s'arrête avec `Unable to initialize state, this can happen if multiple instances of Kafka
+> Streams are running in the same state directory`. En production, chaque instance tourne sur sa propre
+> machine (ou son propre conteneur) : le répertoire par défaut convient.
+
+Les deux instances passent par `REBALANCING` puis `RUNNING` (logs `Etat Kafka Streams : ...`). Dans un
+autre terminal :
 
 ```bash
 kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --describe --group wordcount-app --members
 ```
 
-Les 6 tâches (3 partitions d'entrée + 3 partitions de repartition) sont réparties sur les 2 instances.
-Arrêtez une instance : l'autre **reprend ses tâches** et restaure l'état depuis le changelog. Envoyez de
-nouveau le texte : les comptes continuent de croître (aucune perte d'état).
+```text
+GROUP          CONSUMER-ID                                                    HOST          CLIENT-ID                                                 #PARTITIONS
+wordcount-app  wordcount-app-3f1c...-StreamThread-1-consumer-8a2e...          /172.18.0.1   wordcount-app-3f1c...-StreamThread-1-consumer             3
+wordcount-app  wordcount-app-b7d4...-StreamThread-1-consumer-c51f...          /172.18.0.1   wordcount-app-b7d4...-StreamThread-1-consumer             3
+```
+
+Deux membres (un par instance) : les 6 tâches (3 partitions de `words-input` + 3 partitions du topic
+de repartition) sont réparties entre eux (la répartition exacte peut varier).
+
+Arrêtez une instance (`Ctrl+C`) : après un rééquilibrage, l'autre **reprend ses tâches** et restaure
+l'état manquant depuis le topic changelog. Envoyez de nouveau le texte : les comptes continuent de
+croître (aucune perte d'état).
 
 ### C.2 Réinitialiser une application
 
 Arrêtez toutes les instances puis :
 
 ```bash
-kafka-streams-application-reset.sh --bootstrap-server $BOOTSTRAP --application-id wordcount-app --input-topics words-input --force
-rm -rf /tmp/kafka-streams/wordcount-app
+kafka-streams-application-reset.sh --bootstrap-server $BOOTSTRAP --application-id wordcount-app --input-topics words-input
+rm -rf /tmp/kafka-streams/wordcount-app /tmp/kafka-streams-instance2
 ```
 
 ```text
@@ -672,14 +704,9 @@ kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic orders-revenue-b
 kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic orders-big --from-beginning --timeout-ms 5000 | head -3
 ```
 
-> Les commandes de quantité 0 (`ORD-0017`, `ORD-0042`) sont filtrées.
->
-> Un message JSON invalide serait journalisé puis **ignoré** (`processing.exception.handler=LogAndContinueProcessingExceptionHandler`) au lieu d'arrêter l'application.
-> 
-> Testez :
-```bash
-echo "pas du json" | kafka-console-producer.sh --bootstrap-server $BOOTSTRAP --topic orders
-```
+> Les commandes de quantité 0 (`ORD-0017`, `ORD-0042`) sont filtrées. Un message JSON invalide serait
+> journalisé puis **ignoré** (`processing.exception.handler=LogAndContinueProcessingExceptionHandler`) au lieu
+> d'arrêter l'application. Testez : `echo "pas du json" | kafka-console-producer.sh --bootstrap-server $BOOTSTRAP --topic orders`.
 
 ---
 
@@ -711,13 +738,8 @@ kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --describe --group spring
 curl -s localhost:8085/actuator/prometheus | grep -m3 '^kafka_stream'
 ```
 
-> Spring apporte :
-> - configuration par `application.yml`
-> - (`spring.kafka.streams.*`)
-> - cycle de vie
-> - métriques Micrometer
-> - `StreamsBuilderFactoryBean` (accès à l'objet `KafkaStreams`)
-> - sérialiseurs JSON
+> Spring apporte : configuration par `application.yml` (`spring.kafka.streams.*`), cycle de vie,
+> métriques Micrometer, `StreamsBuilderFactoryBean` (accès à l'objet `KafkaStreams`), sérialiseurs JSON.
 
 Arrêtez l'application (Ctrl+C).
 
