@@ -1750,6 +1750,8 @@ Consommation actuelle des conteneurs :
 
 ```bash
 docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
+```
+```bash
 docker exec broker-1 sh -c 'ls /opt/kafka/logs/ && tail -3 /opt/kafka/logs/kafkaServer-gc.log'
 ```
 
