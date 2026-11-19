@@ -292,7 +292,9 @@ public class StreamsFlatMap {
                 .flatMap((key, value) -> {
                     List<KeyValue<String, String>> result = new ArrayList<>();
                     if (value != null) {
-                        for (String word : value.toLowerCase().split("\\W+")) {
+                        // [^\\p{L}\\p{N}]+ : tout ce qui n'est ni lettre ni chiffre (Unicode) sépare les mots.
+                        // (\\W+ ne connaît que les lettres ASCII : "découpée" donnerait d / coup / e)
+                        for (String word : value.toLowerCase().split("[^\\p{L}\\p{N}]+")) {
                             if (!word.isBlank()) {
                                 result.add(KeyValue.pair(word, key == null ? "" : key));
                             }
@@ -312,7 +314,24 @@ EOF_KAFKA_KRAFT
 ./run.sh streams.StreamsFlatMap
 ```
 
-`phrase1:Voici un exemple de phrase découpée` → 6 messages `voici	phrase1`, `un	phrase1`, ...
+Dans le terminal 2, saisissez : `phrase1:Voici un exemple de phrase découpée`
+
+Terminal 1 (`print`) — 6 messages, un par mot, la clé est devenue le mot :
+
+```text
+[mot]: voici, phrase1
+[mot]: un, phrase1
+[mot]: exemple, phrase1
+[mot]: de, phrase1
+[mot]: phrase, phrase1
+[mot]: découpée, phrase1
+```
+
+Terminal 3 (topic `streams-output`) : `voici	phrase1`, `un	phrase1`, ... `découpée	phrase1`.
+
+> Le découpage utilise `[^\p{L}\p{N}]+` (tout ce qui n'est ni lettre ni chiffre **Unicode**). Avec
+> `\W+`, les lettres accentuées seraient traitées comme des séparateurs (`découpée` → `d`, `coup`, `e`) :
+> en Java, `\w` / `\W` ne connaissent que les lettres ASCII.
 
 > `flatMap` change la clé : si un agrégat suivait, Kafka Streams ajouterait un topic de **repartition**.
 > Préférer `flatMapValues` / `mapValues` quand la clé ne change pas.
@@ -410,7 +429,8 @@ public class WordCount {
 
         StreamsBuilder builder = new StreamsBuilder();
         KTable<String, Long> counts = builder.<String, String>stream("words-input")
-                .flatMapValues(line -> Arrays.asList(line.toLowerCase().split("\\W+")))
+                // séparateur = tout ce qui n'est ni lettre ni chiffre (Unicode : lettres accentuées comprises)
+                .flatMapValues(line -> Arrays.asList(line.toLowerCase().split("[^\\p{L}\\p{N}]+")))
                 .filter((key, word) -> !word.isBlank())
                 .groupBy((key, word) -> word, Grouped.with(Serdes.String(), Serdes.String()))
                 .count(Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as("word-counts")
