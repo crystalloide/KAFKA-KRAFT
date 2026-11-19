@@ -30,6 +30,14 @@ final class StreamsSupport {
         props.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 1000);
         // relit le topic d'entrée depuis le début au premier démarrage
         props.put(StreamsConfig.consumerPrefix("auto.offset.reset"), "earliest");
+        // Répertoire d'état local (RocksDB), verrouillé par l'instance qui l'utilise. Par défaut
+        // /tmp/kafka-streams/<application.id> : pour lancer une 2e instance sur la MÊME machine,
+        // lui donner son propre répertoire, ex. STREAMS_STATE_DIR=/tmp/kafka-streams-2 ./run.sh ...
+        // (en production, chaque instance tourne sur sa propre machine / son propre conteneur).
+        String stateDir = System.getenv("STREAMS_STATE_DIR");
+        if (stateDir != null && !stateDir.isBlank()) {
+            props.put(StreamsConfig.STATE_DIR_CONFIG, stateDir);
+        }
         return props;
     }
 
