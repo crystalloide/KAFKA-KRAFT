@@ -1,4 +1,4 @@
-# Questions de révision : TP07b – Kafka Streams
+## Questions de révision : TP07b – Kafka Streams
 
 Réponses aux trois questions de révision du TP07b (Kafka Streams 4.4.0), illustrées avec l'application
 `WordCount` du TP.
