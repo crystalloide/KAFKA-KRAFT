@@ -1,4 +1,4 @@
-# Comprendre le caractère *Thread-Safe* du `KafkaProducer` (Apache Kafka)
+## Comprendre le caractère *Thread-Safe* du `KafkaProducer` (Apache Kafka)
 
 Dans Apache Kafka (y compris dans les versions récentes comme **Kafka 4.x**), le terme **« thread-safe »** (sécurisé pour les threads) appliqué à la classe `KafkaProducer` signifie qu'**une unique instance de `KafkaProducer` peut être partagée et utilisée simultanément par plusieurs threads** de votre application, sans risque de corruption de données, d'interblocage (*deadlock*) ou d'état interne incohérent.
 
