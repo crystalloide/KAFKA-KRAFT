@@ -1527,23 +1527,50 @@ Prometheus : <http://localhost:9090/targets> → tous les *targets* `kafka-contr
 `kafka-exporter` sont **UP** (`kafka-broker-scale`, `kafka-connect` et `spring-kafka-demo` sont DOWN tant
 que les composants correspondants ne sont pas démarrés : c'est normal).
 
-Requêtes PromQL à tester dans <http://localhost:9090/query> (ou en ligne de commande) :
+Quelques requêtes **PromQL**, à tester de deux façons au choix.
+
+**a) Dans l'interface web de Prometheus** : <http://localhost:9090/query>. Collez **uniquement
+l'expression PromQL** dans le champ de saisie, puis cliquez sur *Execute* (onglet *Table* pour la
+valeur, *Graph* pour la courbe) :
+
+```text
+sum(kafka_controller_kafkacontroller_activecontrollercount)
+max(kafka_controller_kafkacontroller_activebrokercount)
+sum by (instance) (rate(kafka_server_brokertopicmetrics_messagesin_total{topic=""}[1m]))
+kafka_server_raft_metrics_current_state_info{state="leader"}
+```
+
+> Ce champ n'accepte que du PromQL : une commande shell (`q() {...}`, `curl`...) y provoque l'erreur
+> `parse error: unknown function with name "q"`.
+
+**b) Dans un terminal WSL**, via l'API HTTP de Prometheus. On définit d'abord une petite fonction
+shell `q` (une fois par terminal) qui envoie la requête et affiche `instance` + valeur :
 
 ```bash
 q() { curl -s --get localhost:9090/api/v1/query --data-urlencode "query=$1" | jq -r '.data.result[] | "\(.metric.instance // .metric.consumergroup // "-")\t\(.value[1])"'; }
 ```
+
+Puis on l'appelle avec l'expression PromQL entre apostrophes :
+
 ```bash
 q 'sum(kafka_controller_kafkacontroller_activecontrollercount)'
-```
-```bash
 q 'max(kafka_controller_kafkacontroller_activebrokercount)'
-```
-```bash
 q 'sum by (instance) (rate(kafka_server_brokertopicmetrics_messagesin_total{topic=""}[1m]))'
-```
-```bash
 q 'kafka_server_raft_metrics_current_state_info{state="leader"}'
 ```
+
+```text
+-	1
+-	3
+broker-1	0
+broker-2	0
+broker-3	0
+controller-2	1
+```
+
+Lecture : **1** contrôleur actif (jamais 0, jamais 2), **3** brokers actifs, débit entrant par broker
+(0 si aucun producteur ne tourne), et le contrôleur **leader** du quorum KRaft (ici `controller-2` ;
+cela peut être un autre contrôleur). Le `-` indique un résultat agrégé, sans étiquette `instance`.
 
 ### B.4 Grafana
 
