@@ -685,6 +685,7 @@ EOF_KAFKA_KRAFT
 ```
 
 ```bash
+cd ~/KAFKA-KRAFT/java/kafka-java-native
 ./run.sh producer.OrderProducer orders
 ```
 
@@ -801,7 +802,11 @@ EOF_KAFKA_KRAFT
 ```
 
 ```bash
+cd ~/KAFKA-KRAFT/java/kafka-java-native
 ./run.sh producer.VipOrderProducer orders | grep -E "C-00(1|2) " | head
+```
+```bash
+cd ~/KAFKA-KRAFT/java/kafka-java-native
 ./run.sh producer.VipOrderProducer orders | grep -vE "C-00(1|2) " | grep -c "partition 0"
 ```
 
@@ -893,6 +898,7 @@ EOF_KAFKA_KRAFT
 Terminal 2 :
 
 ```bash
+cd ~/KAFKA-KRAFT/java/kafka-java-native
 ./run.sh producer.ReliableProducer test-formation all
 ```
 
@@ -1052,6 +1058,7 @@ Expériences :
 
 1. Produisez à nouveau les commandes : chaque instance ne reçoit que les messages de **ses** partitions :
 ```bash
+cd ~/KAFKA-KRAFT/java/kafka-java-native
 ./run.sh producer.OrderProducer orders 100
  ```
 
@@ -1232,6 +1239,7 @@ EOF_KAFKA_KRAFT
 ```
 
 ```bash
+cd ~/KAFKA-KRAFT/java/kafka-java-native
 ./run.sh consumer.ManualCommitConsumer test-formation groupe-manuel
 ```
 
