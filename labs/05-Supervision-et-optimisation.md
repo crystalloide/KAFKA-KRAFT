@@ -1694,9 +1694,15 @@ Résultats :
 | T3 | all | 20 | 256 Ko | lz4 | | | |
 | T4 | 1 | 20 | 256 Ko | lz4 | | | |
 
-> Les valeurs absolues dépendent du poste (tous les brokers partagent le même disque) ; c'est la
-> **tendance** qui compte : lots + compression = débit nettement supérieur, `acks=1` réduit la latence
-> au prix de la durabilité. Option utile : `--print-metrics` (métriques détaillées du producteur).
+> Les valeurs absolues dépendent du poste (tous les brokers partagent le même disque)
+> 
+> C'est la **tendance** qui compte :
+> 
+> - lots + compression = débit nettement supérieur,
+> - 
+> - `acks=1` réduit la latence au prix de la durabilité.
+> 
+> Option utile : `--print-metrics` (métriques détaillées du producteur).
 
 ### C.3 Consommateur
 
