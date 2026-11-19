@@ -1,6 +1,7 @@
 package fr.formation.kafka.spring.producer;
 
 import fr.formation.kafka.spring.model.Order;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -28,6 +29,8 @@ public class TransactionalOrderService implements DisposableBean {
 
     public TransactionalOrderService(KafkaProperties kafkaProperties) {
         Map<String, Object> config = kafkaProperties.buildProducerProperties();
+        // client.id distinct du producer auto-configuré (spring-kafka-demo-N) : order-tx-producer-N
+        config.put(ProducerConfig.CLIENT_ID_CONFIG, "order-tx-producer");
         this.producerFactory = new DefaultKafkaProducerFactory<>(config);
         this.producerFactory.setTransactionIdPrefix("order-tx-");
         this.transactionalTemplate = new KafkaTemplate<>(producerFactory);
