@@ -704,9 +704,14 @@ kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic orders-revenue-b
 kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic orders-big --from-beginning --timeout-ms 5000 | head -3
 ```
 
-> Les commandes de quantité 0 (`ORD-0017`, `ORD-0042`) sont filtrées. Un message JSON invalide serait
-> journalisé puis **ignoré** (`processing.exception.handler=LogAndContinueProcessingExceptionHandler`) au lieu
-> d'arrêter l'application. Testez : `echo "pas du json" | kafka-console-producer.sh --bootstrap-server $BOOTSTRAP --topic orders`.
+> Les commandes de quantité 0 (`ORD-0017`, `ORD-0042`) sont filtrées.
+>
+> Un message JSON invalide serait journalisé puis **ignoré** (`processing.exception.handler=LogAndContinueProcessingExceptionHandler`) au lieu d'arrêter l'application.
+> 
+> Testez :
+```bash
+echo "pas du json" | kafka-console-producer.sh --bootstrap-server $BOOTSTRAP --topic orders
+```
 
 ---
 
@@ -738,8 +743,13 @@ kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --describe --group spring
 curl -s localhost:8085/actuator/prometheus | grep -m3 '^kafka_stream'
 ```
 
-> Spring apporte : configuration par `application.yml` (`spring.kafka.streams.*`), cycle de vie,
-> métriques Micrometer, `StreamsBuilderFactoryBean` (accès à l'objet `KafkaStreams`), sérialiseurs JSON.
+> Spring apporte :
+> - configuration par `application.yml`
+> - (`spring.kafka.streams.*`)
+> - cycle de vie
+> - métriques Micrometer
+> - `StreamsBuilderFactoryBean` (accès à l'objet `KafkaStreams`)
+> - sérialiseurs JSON
 
 Arrêtez l'application (Ctrl+C).
 
