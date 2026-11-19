@@ -1529,25 +1529,47 @@ que les composants correspondants ne sont pas démarrés : c'est normal).
 
 Quelques requêtes **PromQL**, à tester de deux façons au choix.
 
-**a) Dans l'interface web de Prometheus** : <http://localhost:9090/query>. Collez **uniquement
-l'expression PromQL** dans le champ de saisie, puis cliquez sur *Execute* (onglet *Table* pour la
-valeur, *Graph* pour la courbe) :
+**a) Dans l'interface web de Prometheus** : <http://localhost:9090/query>. Collez **une seule
+expression à la fois** dans le champ de saisie (sans `q`, sans apostrophes), cliquez sur *Execute*,
+puis lisez l'onglet *Table* (valeur actuelle) ou *Graph* (courbe). Commencez par `up` : une ligne
+par cible, valeur `1` si elle répond.
+
+```text
+up
+```
 
 ```text
 sum(kafka_controller_kafkacontroller_activecontrollercount)
+```
+
+```text
 max(kafka_controller_kafkacontroller_activebrokercount)
-sum by (instance) (rate(kafka_server_brokertopicmetrics_messagesin_total{topic=""}[1m]))
+```
+
+```text
+sum by (instance) (rate(kafka_server_brokertopicmetrics_messagesin_total{topic="",role="broker"}[1m]))
+```
+
+```text
 kafka_server_raft_metrics_current_state_info{state="leader"}
 ```
 
 > Ce champ n'accepte que du PromQL : une commande shell (`q() {...}`, `curl`...) y provoque l'erreur
 > `parse error: unknown function with name "q"`.
+>
+> **Résultat vide (« Empty query result ») dans l'interface alors que la même requête répond dans le
+> terminal ?** Vérifiez que le champ *Evaluation time* est **vide** (sinon la requête est évaluée à cette
+> date-là). Si `up` lui-même est vide, comparez l'heure du navigateur et celle du serveur : l'interface
+> évalue la requête à l'heure **du navigateur** ; au-delà de 5 min d'écart, aucune donnée n'est trouvée.
+> Comparez `time()` dans l'interface avec `date +%s` dans le terminal, et resynchronisez l'horloge
+> de la machine en retard (`timedatectl status`, `sudo timedatectl set-ntp true`).
 
-**b) Dans un terminal WSL**, via l'API HTTP de Prometheus. On définit d'abord une petite fonction
-shell `q` (une fois par terminal) qui envoie la requête et affiche `instance` + valeur :
+**b) Dans un terminal WSL**, via l'API HTTP de Prometheus (qui évalue la requête à l'heure du serveur).
+On définit d'abord une petite fonction shell `q` (une fois par terminal) qui envoie la requête et
+affiche `instance` + valeur, triées :
 
 ```bash
-q() { curl -s --get localhost:9090/api/v1/query --data-urlencode "query=$1" | jq -r '.data.result[] | "\(.metric.instance // .metric.consumergroup // "-")\t\(.value[1])"'; }
+q() { curl -s --get localhost:9090/api/v1/query --data-urlencode "query=$1" | jq -r '.data.result[] | "\(.metric.instance // .metric.consumergroup // "-")\t\(.value[1])"' | sort; }
 ```
 
 Puis on l'appelle avec l'expression PromQL entre apostrophes :
@@ -1555,7 +1577,7 @@ Puis on l'appelle avec l'expression PromQL entre apostrophes :
 ```bash
 q 'sum(kafka_controller_kafkacontroller_activecontrollercount)'
 q 'max(kafka_controller_kafkacontroller_activebrokercount)'
-q 'sum by (instance) (rate(kafka_server_brokertopicmetrics_messagesin_total{topic=""}[1m]))'
+q 'sum by (instance) (rate(kafka_server_brokertopicmetrics_messagesin_total{topic="",role="broker"}[1m]))'
 q 'kafka_server_raft_metrics_current_state_info{state="leader"}'
 ```
 
@@ -1571,6 +1593,13 @@ controller-2	1
 Lecture : **1** contrôleur actif (jamais 0, jamais 2), **3** brokers actifs, débit entrant par broker
 (0 si aucun producteur ne tourne), et le contrôleur **leader** du quorum KRaft (ici `controller-2` ;
 cela peut être un autre contrôleur). Le `-` indique un résultat agrégé, sans étiquette `instance`.
+
+> Le filtre `role="broker"` (étiquette ajoutée par `prometheus.yml`) écarte les contrôleurs : ils
+> exposent eux aussi les métriques `BrokerTopicMetrics`, toujours à 0. L'état Raft vient de la règle
+> `current-state` de `config/jmx-exporter/kafka.yml` ; pour le vérifier à la source :
+> `docker exec controller-1 wget -qO- http://localhost:9404/metrics | grep raft_metrics_current_state`
+> (`state="leader"` ou `state="follower"` ; `state="observer"` sur un broker).
+
 
 ### B.4 Grafana
 
