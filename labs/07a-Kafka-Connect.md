@@ -116,7 +116,13 @@ Affichage :
 Test de message depuis Kafka Connect source
 une ligne de plus
 ...
-["local-file-source","local-file-sink"]
+
+
+[
+  "local-file-source",
+  "local-file-sink"
+]
+
 ```
 
 Arrêtez le worker standalone (Ctrl+C) : la suite utilise le **mode distribué**.
