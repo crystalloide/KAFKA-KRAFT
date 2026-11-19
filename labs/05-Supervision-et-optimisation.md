@@ -1795,7 +1795,11 @@ Un groupe consomme 100 messages puis s'arrête ; on produit ensuite 50 000 messa
 ```bash
 source ~/KAFKA-KRAFT/scripts/kafka-env.sh
 kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic perf-test --group lag-demo --max-messages 100 > /dev/null
+```
+```bash
 kafka-producer-perf-test.sh --bootstrap-server $BOOTSTRAP --topic perf-test --num-records 50000 --record-size 200 --throughput 2000
+```
+```bash
 kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --describe --group lag-demo | awk 'NR==1 || /perf-test/ {print $1, $2, $3, $6}'
 ```
 
@@ -1807,22 +1811,34 @@ Résorption du lag :
 
 ```bash
 kafka-console-consumer.sh --bootstrap-server $BOOTSTRAP --topic perf-test --group lag-demo --timeout-ms 20000 > /dev/null
+```
+```bash
 kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --describe --group lag-demo | awk 'NR==1 || /perf-test/ {print $1, $2, $3, $6}'
 ```
 
 ### D.3 (Optionnel) Métriques des clients : application Spring Boot
 
-Lancez l'application du TP03 (`cd ~/KAFKA-KRAFT/java/spring-kafka-demo && mvn -q spring-boot:run`) :
-le target `spring-kafka-demo` passe **UP** dans Prometheus. Requêtes utiles :
+Lancez l'application du TP03 :
+
+```bash
+cd ~/KAFKA-KRAFT/java/spring-kafka-demo && mvn -q spring-boot:run
+```
+
+-> Le target `spring-kafka-demo` passe **UP** dans Prometheus. 
+
+Requêtes utiles :
 
 ```text
 kafka_consumer_fetch_manager_records_lag_max{client_id=~".*order-listener.*"}
+```
+```bash
 rate(kafka_producer_record_send_total[1m])
+```
+```bash
 kafka_producer_request_latency_avg
 ```
 
-> L'application doit tourner **dans WSL** (terminal ou IntelliJ avec un JDK WSL) : Prometheus la joint
-> via `host.docker.internal`.
+> L'application doit tourner **dans un terminal ou IntelliJ** ) : Prometheus la joint via `host.docker.internal`.
 
 ---
 
