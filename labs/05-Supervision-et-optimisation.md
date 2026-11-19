@@ -1681,7 +1681,10 @@ kafka-producer-perf-test.sh --bootstrap-server $BOOTSTRAP --topic perf-test --nu
 Résultats :
 
 ```text
-200000 records sent, 41322.3 records/sec (39.41 MB/sec), 612.27 ms avg latency, 1081.00 ms max latency, 590 ms 50th, 985 ms 95th, 1040 ms 99th, 1069 ms 99.9th.
+200000 records sent, 44033,465434 records/sec (41,99 MB/sec), 625,98 ms avg latency, 977,00 ms max latency, 670 ms 50th, 899 ms 95th, 950 ms 99th, 968 ms 99.9th.
+200000 records sent, 148038,490007 records/sec (141,18 MB/sec), 8,74 ms avg latency, 332,00 ms max latency, 6 ms 50th, 28 ms 95th, 41 ms 99th, 50 ms 99.9th.
+200000 records sent, 96618,357488 records/sec (92,14 MB/sec), 14,73 ms avg latency, 441,00 ms max latency, 10 ms 50th, 38 ms 95th, 101 ms 99th, 121 ms 99.9th.
+200000 records sent, 86542,622241 records/sec (82,53 MB/sec), 11,31 ms avg latency, 361,00 ms max latency, 8 ms 50th, 35 ms 95th, 46 ms 99th, 53 ms 99.9th.
 ```
 
 | Test | `acks` | `linger.ms` | `batch.size` | compression | records/s | MB/s | latence p99 |
