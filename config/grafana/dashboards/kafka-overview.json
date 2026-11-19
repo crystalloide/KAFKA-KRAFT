@@ -1032,7 +1032,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "kafka_server_raft_metrics_current_state_info{role=\"controller\",state=\"leader\"}",
+          "expr": "kafka_server_raft_metrics_current_state{role=\"controller\",state=\"leader\"}",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }
