@@ -1,8 +1,11 @@
 ## TP07e – MirrorMaker 2 : réplication entre clusters et plan de reprise
 
 > **Chapitre 7 du programme (écosystème)**
+> 
 > Durée : 45 min
+> 
 > Pré-requis : cluster du TP02, `source ~/KAFKA-KRAFT/scripts/kafka-env.sh`
+> 
 > Nouveau TP (MirrorMaker 1 a été **supprimé** dans Kafka 4.0 : seul MirrorMaker 2 subsiste)
 
 ---
