@@ -1661,16 +1661,24 @@ Lancez chaque test, gardez Grafana ouvert et notez les résultats (dernière lig
 # T1 - référence : pas de regroupement, pas de compression
 kafka-producer-perf-test.sh --bootstrap-server $BOOTSTRAP --topic perf-test --num-records 200000 --record-size 1000 \
   --throughput -1 --command-property acks=all linger.ms=0 batch.size=16384 compression.type=none
+```
+```bash
 # T2 - regroupement en lots plus gros
 kafka-producer-perf-test.sh --bootstrap-server $BOOTSTRAP --topic perf-test --num-records 200000 --record-size 1000 \
   --throughput -1 --command-property acks=all linger.ms=20 batch.size=262144 compression.type=none
+```
+```bash
 # T3 - lots + compression lz4
 kafka-producer-perf-test.sh --bootstrap-server $BOOTSTRAP --topic perf-test --num-records 200000 --record-size 1000 \
   --throughput -1 --command-property acks=all linger.ms=20 batch.size=262144 compression.type=lz4
+```
+```bash
 # T4 - comme T3 avec acks=1 (moins durable)
 kafka-producer-perf-test.sh --bootstrap-server $BOOTSTRAP --topic perf-test --num-records 200000 --record-size 1000 \
   --throughput -1 --command-property acks=1 linger.ms=20 batch.size=262144 compression.type=lz4
 ```
+
+Résultats :
 
 ```text
 200000 records sent, 41322.3 records/sec (39.41 MB/sec), 612.27 ms avg latency, 1081.00 ms max latency, 590 ms 50th, 985 ms 95th, 1040 ms 99th, 1069 ms 99.9th.
