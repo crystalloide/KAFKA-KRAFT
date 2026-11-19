@@ -1564,14 +1564,15 @@ kafka_server_raft_metrics_current_state{state="leader"}
 > Ce champ n'accepte que du PromQL : une commande shell (`q() {...}`, `curl`...) y provoque l'erreur
 > `parse error: unknown function with name "q"`.
 >
-> **Résultat vide (« Empty query result ») dans l'interface alors que la même requête répond dans le
-> terminal ?** Vérifiez que le champ *Evaluation time* est **vide** (sinon la requête est évaluée à cette
-> date-là). Si `up` lui-même est vide, comparez l'heure du navigateur et celle du serveur : l'interface
-> évalue la requête à l'heure **du navigateur** ; au-delà de 5 min d'écart, aucune donnée n'est trouvée.
-> Comparez `time()` dans l'interface avec `date +%s` dans le terminal, et resynchronisez l'horloge
-> de la machine en retard (`timedatectl status`, `sudo timedatectl set-ntp true`).
+> **Résultat vide (« Empty query result ») dans l'interface alors que la même requête répond dans le terminal ?**
+>
+> Vérifiez que le champ *Evaluation time* est **vide** (sinon la requête est évaluée à cette date-là).
+>
+> Si `up` lui-même est vide, comparez l'heure du navigateur et celle du serveur : l'interface évalue la requête à l'heure **du navigateur** ; au-delà de 5 min d'écart, aucune donnée n'est trouvée.
+> 
+> Comparez `time()` dans l'interface avec `date +%s` dans le terminal, et resynchronisez l'horloge de la machine en retard (`timedatectl status`, `sudo timedatectl set-ntp true`).
 
-**b) Dans un terminal WSL**, via l'API HTTP de Prometheus (qui évalue la requête à l'heure du serveur).
+**b) Dans un terminal**, via l'API HTTP de Prometheus (qui évalue la requête à l'heure du serveur).
 On définit d'abord une petite fonction shell `q` (une fois par terminal) qui envoie la requête et
 affiche `instance` + valeur, triées :
 
@@ -1583,10 +1584,18 @@ Puis on l'appelle avec l'expression PromQL entre apostrophes :
 
 ```bash
 q 'sum(kafka_controller_kafkacontroller_activecontrollercount)'
+```
+```bash
 q 'max(kafka_controller_kafkacontroller_activebrokercount)'
+```
+```bash
 q 'sum by (instance) (rate(kafka_server_brokertopicmetrics_messagesin_total{topic="",role="broker"}[1m]))'
+```
+```bash
 q 'kafka_server_raft_metrics_current_state{state="leader"}'
 ```
+
+Synthèse des affichages successifs : 
 
 ```text
 -	1
