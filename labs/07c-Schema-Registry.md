@@ -1,4 +1,4 @@
-# TP07c – Schema Registry : contrats de données et évolution des schémas
+## TP07c – Schema Registry : contrats de données et évolution des schémas
 
 > **Chapitre 7 du programme (écosystème)**
 > Durée : 45 min
