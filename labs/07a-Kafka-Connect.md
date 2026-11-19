@@ -744,17 +744,17 @@ docker compose exec postgres psql -U postgres -d formation -c "SELECT id, first_
 
 ```bash
 curl -s -X PUT localhost:8083/connectors/pg-customers-source/pause
-``
-``bash
+```
+```bash
 curl -s localhost:8083/connectors/pg-customers-source/status | jq -r .connector.state
-``
-``bash
+```
+```bash
 curl -s -X PUT localhost:8083/connectors/pg-customers-source/resume
-``
-``bash
+```
+```bash
 curl -s -X POST "localhost:8083/connectors/jdbc-customers-sink/restart?includeTasks=true&onlyFailed=true" | jq
-``
-``bash
+```
+```bash
 kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --describe --group connect-jdbc-customers-sink
 ```
 
