@@ -725,6 +725,10 @@ cd ~/KAFKA-KRAFT/java/spring-kafka-demo
 mvn -q spring-boot:run -Dspring-boot.run.arguments=--app.streams.enabled=true
 ```
 
+```bash
+kafka-topics.sh --bootstrap-server $BOOTSTRAP --create --topic orders-dlt-dlt
+```
+
 Dans un autre terminal :
 
 ```bash
